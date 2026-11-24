@@ -269,9 +269,12 @@ fun MonoSettingsScreen(
                     )
                 }
 
-         Column {
-                    MonoDivider()
-                }
+         Box(
+    modifier = Modifier
+        .fillMaxWidth()
+        .height(1.dp)
+        .background(Color.White.copy(alpha = 0.12f))
+)
 
                 Text(
                     text = "Unlock Methods (enable any or all)",
