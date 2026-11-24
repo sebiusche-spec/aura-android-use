@@ -269,7 +269,9 @@ fun MonoSettingsScreen(
                     )
                 }
 
-                MonoDivider()
+         Column {
+                    MonoDivider()
+                }
 
                 Text(
                     text = "Unlock Methods (enable any or all)",
