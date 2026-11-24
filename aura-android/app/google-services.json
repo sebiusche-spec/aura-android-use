@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "739549332718",
+    "project_id": "thakur-os",
+    "storage_bucket": "thakur-os.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:739549332718:android:e4c71e5249463d5c2adfff",
+        "android_client_info": {
+          "package_name": "com.aura.auraui"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC_ohRWxJ9GVlXMA_e4EHcMMLvqHK0vYw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
