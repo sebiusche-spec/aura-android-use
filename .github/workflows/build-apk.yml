@@ -19,7 +19,6 @@ jobs:
 
       - name: Create dummy google-services.json if missing
         run: |
-          if [ ! -f aura-android/app/google-services.json ]; then
           cat > aura-android/app/google-services.json << 'EOF'
           {
             "project_info": {
@@ -30,7 +29,31 @@ jobs:
             "client": [
               {
                 "client_info": {
-                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000001",
+                  "android_client_info": {
+                    "package_name": "com.aura.aura_ui.feature.debug"
+                  }
+                },
+                "api_key": [{ "current_key": "dummy" }],
+                "services": {
+                  "appinvite_service": { "other_platform_oauth_client": [] }
+                }
+              },
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000002",
+                  "android_client_info": {
+                    "package_name": "com.aura.aura_ui.feature"
+                  }
+                },
+                "api_key": [{ "current_key": "dummy" }],
+                "services": {
+                  "appinvite_service": { "other_platform_oauth_client": [] }
+                }
+              },
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000003",
                   "android_client_info": {
                     "package_name": "com.aura"
                   }
@@ -44,7 +67,6 @@ jobs:
             "configuration_version": "1"
           }
           EOF
-          fi
 
       - name: Grant execute permission
         run: chmod +x ./aura-android/gradlew
