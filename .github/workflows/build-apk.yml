@@ -17,56 +17,13 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Create dummy google-services.json if missing
+      - name: Check google-services.json exists
         run: |
-          cat > aura-android/app/google-services.json << 'EOF'
-          {
-            "project_info": {
-              "project_number": "000000000000",
-              "project_id": "thakur-os-dummy",
-              "storage_bucket": "thakur-os-dummy.appspot.com"
-            },
-            "client": [
-              {
-                "client_info": {
-                  "mobilesdk_app_id": "1:000000000000:android:0000000000000001",
-                  "android_client_info": {
-                    "package_name": "com.aura.aura_ui.feature.debug"
-                  }
-                },
-                "api_key": [{ "current_key": "dummy" }],
-                "services": {
-                  "appinvite_service": { "other_platform_oauth_client": [] }
-                }
-              },
-              {
-                "client_info": {
-                  "mobilesdk_app_id": "1:000000000000:android:0000000000000002",
-                  "android_client_info": {
-                    "package_name": "com.aura.aura_ui.feature"
-                  }
-                },
-                "api_key": [{ "current_key": "dummy" }],
-                "services": {
-                  "appinvite_service": { "other_platform_oauth_client": [] }
-                }
-              },
-              {
-                "client_info": {
-                  "mobilesdk_app_id": "1:000000000000:android:0000000000000003",
-                  "android_client_info": {
-                    "package_name": "com.aura"
-                  }
-                },
-                "api_key": [{ "current_key": "dummy" }],
-                "services": {
-                  "appinvite_service": { "other_platform_oauth_client": [] }
-                }
-              }
-            ],
-            "configuration_version": "1"
-          }
-          EOF
+          if [ ! -f aura-android/app/google-services.json ]; then
+            echo "ERROR: google-services.json missing! Upload real file from Firebase."
+            exit 1
+          fi
+          echo "Real google-services.json found, using it."
 
       - name: Grant execute permission
         run: chmod +x ./aura-android/gradlew
