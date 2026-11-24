@@ -122,7 +122,18 @@ object AuraRoutes {
 
     fun sessionDetail(sessionId: String) = "activity/session/$sessionId"
 }
-
+    @Composable
+fun AuraAppShell(
+    navController: NavHostController = rememberNavController(),
+    startDestination: String = AuraRoutes.HOME,
+    onStartChat: (String?) -> Unit = {},
+    onOpenBrowser: () -> Unit = {},
+    onRequestScreenCapture: () -> Unit = {},
+) {
+    val analyticsContext = LocalContext.current
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
+    
     val scheme = rememberMonoScheme()
     val gateViewModel: RemoteGateViewModel = hiltViewModel()
     val gateState by gateViewModel.gateState.collectAsState()
