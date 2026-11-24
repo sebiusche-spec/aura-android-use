@@ -14,7 +14,7 @@ import com.aura.aura_ui.services.RemoteRun.Outcome
  */
 object OnDeviceReport {
 
-    private const val CLIENT = "AURA"
+    private const val CLIENT = "THAKUR OS"
     private const val MAX_RECENT = 6
 
     /**

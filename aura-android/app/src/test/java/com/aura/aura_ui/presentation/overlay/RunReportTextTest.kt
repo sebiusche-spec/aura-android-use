@@ -15,12 +15,12 @@ class RunReportTextTest {
         markdown: String? = null,
         recent: List<String> = emptyList(),
         onDevice: Boolean = true,
-    ) = RemoteRun.Report(outcome, "AURA", 14_000, 3, summary, markdown, recent, onDevice)
+    ) = RemoteRun.Report(outcome, "THAKUR OS", 14_000, 3, summary, markdown, recent, onDevice)
 
     @Test
     fun `the log keeps what the card showed`() {
         assertEquals(
-            "Task complete · AURA · 14s · 3 steps\n\nOpened it.\n\n## Sent\n- to Joyboy",
+            "Task complete · THAKUR OS · 14s · 3 steps\n\nOpened it.\n\n## Sent\n- to Joyboy",
             reportText(report(summary = "Opened it.", markdown = "## Sent\n- to Joyboy")),
         )
     }
@@ -28,7 +28,7 @@ class RunReportTextTest {
     @Test
     fun `a run with no report lists its steps, as the card does`() {
         assertEquals(
-            "Stopped · AURA · 14s · 3 steps\n\n- launch app WhatsApp\n- tap Send",
+            "Stopped · THAKUR OS · 14s · 3 steps\n\n- launch app WhatsApp\n- tap Send",
             reportText(report(Outcome.STOPPED, recent = listOf("launch app WhatsApp", "tap Send"))),
         )
     }

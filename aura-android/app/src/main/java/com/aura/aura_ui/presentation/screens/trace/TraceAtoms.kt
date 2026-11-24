@@ -59,6 +59,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
+import com.aura.aura_ui.presentation.components.LiquidPalette
 import com.aura.aura_ui.ui.theme.Mono
 import com.aura.aura_ui.ui.theme.MonoScheme
 import kotlinx.coroutines.Dispatchers
@@ -214,15 +216,21 @@ internal fun PayloadSection(
             }
             Spacer(Modifier.weight(1f))
             if (!collapsed && reformatted) {
-                Text(
-                    if (pretty) "raw" else "formatted",
-                    modifier = Modifier
-                        .clip(Mono.ShapeChip)
-                        .clickable { pretty = !pretty }
-                        .padding(horizontal = 8.dp, vertical = 3.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = scheme.textSecondary,
-                )
+                LiquidGlassSurface(
+                    shape = Mono.ShapeChip,
+                    cornerRadiusDp = 12.dp,
+                    strongBlur = false,
+                    tintAlpha = 0.45f,
+                    onClick = { pretty = !pretty },
+                ) {
+                    Text(
+                        if (pretty) "raw" else "formatted",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White.copy(alpha = 0.85f),
+                    )
+                }
+                Spacer(Modifier.width(6.dp))
             }
             CopyButton(raw, label, scheme)
         }
@@ -265,10 +273,13 @@ private fun PayloadBlockView(block: PayloadBlock, scheme: MonoScheme, accent: Co
             val rendered = remember(block, scheme) {
                 highlightJson(block.payload, palette, scheme.textPrimary)
             }
-            Surface(
-                color = scheme.canvas,
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.5.dp, accent.copy(alpha = 0.4f)),
+            LiquidGlassSurface(
+                shape = RoundedCornerShape(10.dp),
+                cornerRadiusDp = 10.dp,
+                strongBlur = false,
+                tintAlpha = 0.65f,
+                prismIntensity = 0.55f,
+                accentGlow = accent,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
@@ -304,10 +315,13 @@ private fun PayloadBlockView(block: PayloadBlock, scheme: MonoScheme, accent: Co
 /** The exact stored string, unformatted — what the `raw` toggle shows. */
 @Composable
 private fun RawBox(raw: String, scheme: MonoScheme, accent: Color) {
-    Surface(
-        color = scheme.canvas,
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.5.dp, accent.copy(alpha = 0.4f)),
+    LiquidGlassSurface(
+        shape = RoundedCornerShape(10.dp),
+        cornerRadiusDp = 10.dp,
+        strongBlur = false,
+        tintAlpha = 0.65f,
+        prismIntensity = 0.55f,
+        accentGlow = accent,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Text(
@@ -365,10 +379,13 @@ internal fun ScreenCanvasSection(canvas: String, scheme: MonoScheme, accent: Col
             CopyButton(canvas, "screen", scheme)
         }
         if (!collapsed) {
-            Surface(
-                color = scheme.canvas,
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.5.dp, accent.copy(alpha = 0.4f)),
+            LiquidGlassSurface(
+                shape = RoundedCornerShape(10.dp),
+                cornerRadiusDp = 10.dp,
+                strongBlur = false,
+                tintAlpha = 0.65f,
+                prismIntensity = 0.55f,
+                accentGlow = accent,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 BoxWithConstraints(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
@@ -417,11 +434,15 @@ internal fun GridPayloadSection(raw: String, scheme: MonoScheme, accent: Color =
             Spacer(Modifier.weight(1f))
             CopyButton(raw, "screen", scheme)
         }
-        Surface(
-            color = scheme.canvas,
-            shape = RoundedCornerShape(8.dp),
-            border = BorderStroke(1.5.dp, accent.copy(alpha = 0.4f)),
-            modifier = Modifier.fillMaxWidth().clickable { expanded = true },
+        LiquidGlassSurface(
+            shape = RoundedCornerShape(10.dp),
+            cornerRadiusDp = 10.dp,
+            strongBlur = false,
+            tintAlpha = 0.65f,
+            prismIntensity = 0.55f,
+            accentGlow = accent,
+            onClick = { expanded = true },
+            modifier = Modifier.fillMaxWidth(),
         ) {
             BoxWithConstraints(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
                 val fitted = (maxWidth.value / (widestRow.coerceAtLeast(1) * 0.6f))
@@ -561,19 +582,27 @@ internal fun GridZoomDialog(raw: String, onDismiss: () -> Unit) {
 internal fun CopyButton(raw: String, label: String, scheme: MonoScheme) {
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
-    Icon(
-        Icons.Filled.ContentCopy,
-        contentDescription = "Copy $label",
-        modifier = Modifier
-            .clip(CircleShape)
-            .clickable {
-                clipboard.setText(AnnotatedString(raw))
-                Toast.makeText(context, "$label copied", Toast.LENGTH_SHORT).show()
-            }
-            .padding(4.dp)
-            .size(16.dp),
-        tint = scheme.textSecondary,
-    )
+    LiquidGlassSurface(
+        modifier = Modifier.size(26.dp),
+        shape = CircleShape,
+        cornerRadiusDp = 13.dp,
+        strongBlur = false,
+        tintAlpha = 0.45f,
+        accentGlow = LiquidPalette.SilkCyan,
+        onClick = {
+            clipboard.setText(AnnotatedString(raw))
+            Toast.makeText(context, "$label copied", Toast.LENGTH_SHORT).show()
+        },
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Icon(
+                Icons.Filled.ContentCopy,
+                contentDescription = "Copy $label",
+                modifier = Modifier.size(13.dp),
+                tint = LiquidPalette.SilkCyan,
+            )
+        }
+    }
 }
 
 // ── Images ──────────────────────────────────────────────────────────────────

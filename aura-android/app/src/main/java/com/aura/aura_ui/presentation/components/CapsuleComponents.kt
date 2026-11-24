@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.dp
 import com.aura.aura_ui.ui.theme.Capsule
 import com.aura.aura_ui.ui.theme.CapsuleScheme
 import com.aura.aura_ui.ui.theme.charBrush
@@ -35,27 +36,18 @@ fun CharcoalCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale = if (pressed) 0.98f else 1f
-    val body: @Composable () -> Unit = {
-        Box(modifier = Modifier.background(cs.charBrush())) {
-            androidx.compose.foundation.layout.Column(content = content)
-        }
-    }
-    if (onClick != null) {
-        Surface(
-            onClick = onClick,
-            shape = Capsule.ShapeHero,
-            color = Color.Transparent,
-            interactionSource = interaction,
-            modifier = modifier.fillMaxWidth().graphicsLayer { scaleX = scale; scaleY = scale },
-        ) { body() }
-    } else {
-        Surface(
-            shape = Capsule.ShapeHero,
-            color = Color.Transparent,
-            modifier = modifier.fillMaxWidth(),
-        ) { body() }
+    LiquidGlassSurface(
+        modifier = modifier.fillMaxWidth(),
+        shape = Capsule.ShapeHero,
+        cornerRadiusDp = 26.dp,
+        strongBlur = true,
+        tintAlpha = 0.52f,
+        prismIntensity = 1.2f,
+        onClick = onClick,
+    ) {
+        androidx.compose.foundation.layout.Column(
+            modifier = Modifier.fillMaxWidth(),
+            content = content,
+        )
     }
 }

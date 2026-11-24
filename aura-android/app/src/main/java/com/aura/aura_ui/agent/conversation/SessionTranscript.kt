@@ -55,7 +55,7 @@ class SessionTranscript(
         add("User", "user", text, kind, complete, spoke)
 
     fun addModel(text: String, kind: String = "speech", complete: Boolean = true, spoke: Boolean = true) =
-        add("AURA", "aura", text, kind, complete, spoke)
+        add("THAKUR OS", "aura", text, kind, complete, spoke)
 
     /**
      * Record something that happened but was not *said* — session start, a reconnect, a

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -42,6 +43,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
+import com.aura.aura_ui.presentation.components.LiquidGlassButton
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
+import com.aura.aura_ui.presentation.components.LiquidPalette
+import com.aura.aura_ui.presentation.components.SilkMeshBackground
 import com.aura.aura_ui.presentation.components.rememberMonoScheme
 import com.aura.aura_ui.ui.theme.Mono
 import kotlinx.coroutines.Dispatchers
@@ -71,75 +76,82 @@ internal fun RawBodyDialog(file: File, title: String, onDismiss: () -> Unit) {
     }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Column(Modifier.fillMaxSize().background(scheme.canvas)) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = scheme.textPrimary)
+        Box(Modifier.fillMaxSize()) {
+            SilkMeshBackground()
+            Column(Modifier.fillMaxSize().statusBarsPadding()) {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = scheme.textPrimary)
+                        Text(
+                            "${file.name} · ${sizeLabel(file.length())} · exact bytes on disk",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = scheme.textSecondary,
+                        )
+                    }
+                    Action("Copy", scheme) { copyOrShare(context, file) }
+                    Action("Close", scheme, onDismiss)
+                }
+                LiquidGlassSurface(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth(),
+                    shape = Mono.ShapeChip,
+                    cornerRadiusDp = 12.dp,
+                    strongBlur = false,
+                    tintAlpha = 0.52f,
+                    accentGlow = LiquidPalette.SilkCyan,
+                ) {
+                    Box(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                        if (query.isEmpty()) Text("Search", style = MaterialTheme.typography.bodySmall, color = scheme.textSecondary)
+                        BasicTextField(
+                            value = query,
+                            onValueChange = { query = it },
+                            singleLine = true,
+                            textStyle = TextStyle(color = scheme.textPrimary, fontSize = 13.sp),
+                            cursorBrush = SolidColor(LiquidPalette.SilkCyan),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
+                val all = lines
+                if (all == null) {
+                    Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = LiquidPalette.SilkCyan) }
+                    return@Column
+                }
+                val shown = remember(all, query) {
+                    if (query.isBlank()) all.withIndex().toList()
+                    else all.withIndex().filter { it.value.contains(query, ignoreCase = true) }
+                }
+                if (query.isNotBlank()) {
                     Text(
-                        "${file.name} · ${sizeLabel(file.length())} · exact bytes on disk",
+                        "${shown.size} matching lines",
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = scheme.textSecondary,
                     )
                 }
-                Action("Copy", scheme) { copyOrShare(context, file) }
-                Action("Close", scheme, onDismiss)
-            }
-            Box(
-                Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth()
-                    .clip(Mono.ShapeChip)
-                    .background(scheme.chip)
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
-            ) {
-                if (query.isEmpty()) Text("Search", style = MaterialTheme.typography.bodySmall, color = scheme.textSecondary)
-                BasicTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    singleLine = true,
-                    textStyle = TextStyle(color = scheme.textPrimary, fontSize = 13.sp),
-                    cursorBrush = SolidColor(scheme.textPrimary),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            val all = lines
-            if (all == null) {
-                Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = scheme.textPrimary) }
-                return@Column
-            }
-            val shown = remember(all, query) {
-                if (query.isBlank()) all.withIndex().toList()
-                else all.withIndex().filter { it.value.contains(query, ignoreCase = true) }
-            }
-            if (query.isNotBlank()) {
-                Text(
-                    "${shown.size} matching lines",
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = scheme.textSecondary,
-                )
-            }
-            SelectionContainer {
-                LazyColumn(contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)) {
-                    itemsIndexed(shown, key = { _, l -> l.index }) { _, line ->
-                        Row {
-                            Text(
-                                "${line.index + 1}",
-                                modifier = Modifier.width(40.dp).padding(end = 6.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontFamily = FontFamily.Monospace,
-                                color = scheme.textSecondary,
-                            )
-                            Text(
-                                line.value,
-                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp, lineHeight = 16.sp),
-                                fontFamily = FontFamily.Monospace,
-                                color = scheme.textPrimary,
-                            )
+                SelectionContainer {
+                    LazyColumn(contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)) {
+                        itemsIndexed(shown, key = { _, l -> l.index }) { _, line ->
+                            Row {
+                                Text(
+                                    "${line.index + 1}",
+                                    modifier = Modifier.width(40.dp).padding(end = 6.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = scheme.textSecondary,
+                                )
+                                Text(
+                                    line.value,
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp, lineHeight = 16.sp),
+                                    fontFamily = FontFamily.Monospace,
+                                    color = scheme.textPrimary,
+                                )
+                            }
                         }
                     }
                 }
@@ -150,16 +162,13 @@ internal fun RawBodyDialog(file: File, title: String, onDismiss: () -> Unit) {
 
 @Composable
 private fun Action(label: String, scheme: com.aura.aura_ui.ui.theme.MonoScheme, onClick: () -> Unit) {
-    Text(
-        label,
-        modifier = Modifier
-            .clip(Mono.ShapePill)
-            .background(scheme.chip)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        style = MaterialTheme.typography.labelMedium,
-        color = scheme.textPrimary,
-    )
+    LiquidGlassButton(
+        onClick = onClick,
+        accentGlow = LiquidPalette.SilkCyan,
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+    ) {
+        Text(label, style = MaterialTheme.typography.labelMedium)
+    }
 }
 
 /** Base64 runs this long are images, not text anyone reads. */

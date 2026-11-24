@@ -29,6 +29,9 @@ import com.aura.aura_ui.agent.llm.RestrictedAppClassifier
 import com.aura.aura_ui.data.AppInfo
 import com.aura.aura_ui.mcp.AppRestrictedApps
 import com.aura.aura_ui.presentation.components.AuraScreenScaffold
+import com.aura.aura_ui.presentation.components.LiquidGlassButton
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
+import com.aura.aura_ui.presentation.components.LiquidPalette
 import com.aura.aura_ui.ui.theme.Capsule
 import com.aura.aura_ui.ui.theme.CapsuleScheme
 import com.aura.aura_ui.utils.AppInventoryScanner
@@ -70,15 +73,15 @@ fun RestrictedAppsScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var pendingRemove by remember { mutableStateOf<RestrictedAppEntry?>(null) }
 
-    AuraScreenScaffold(title = "Restricted Apps", subtitle = "Apps AURA stays out of") {
+    AuraScreenScaffold(title = "Restricted Apps", subtitle = "Apps THAKUR OS stays out of") {
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                "AURA will not act inside these apps. \"Decline\" just refuses to help; " +
-                    "\"Also disable Accessibility\" additionally turns AURA's accessibility " +
-                    "off the moment the app opens, for apps that block AURA at the OS level " +
+                "THAKUR OS will not act inside these apps. \"Decline\" just refuses to help; " +
+                    "\"Also disable Accessibility\" additionally turns THAKUR OS's accessibility " +
+                    "off the moment the app opens, for apps that block THAKUR OS at the OS level " +
                     "(most banking/UPI apps). That one requires manually turning Accessibility " +
                     "back on afterward — Android allows no other way.",
                 style = MaterialTheme.typography.bodySmall,
@@ -89,7 +92,7 @@ fun RestrictedAppsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Button(
+                LiquidGlassButton(
                     onClick = {
                         scope.launch {
                             scanning = true
@@ -108,13 +111,14 @@ fun RestrictedAppsScreen(
                         }
                     },
                     enabled = !scanning,
+                    accentGlow = LiquidPalette.PrismBlue,
                     modifier = Modifier.weight(1f),
                 ) {
                     if (scanning) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = androidx.compose.ui.graphics.Color.White,
                         )
                         Spacer(Modifier.width(8.dp))
                         Text("Scanning…")
@@ -122,9 +126,11 @@ fun RestrictedAppsScreen(
                         Text("Scan for sensitive apps")
                     }
                 }
-                OutlinedButton(onClick = { showAddDialog = true }) {
+                LiquidGlassButton(
+                    onClick = { showAddDialog = true },
+                    accentGlow = LiquidPalette.SilkCyan,
+                ) {
                     Icon(Icons.Filled.Add, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
                     Text("Add")
                 }
             }
@@ -140,10 +146,11 @@ fun RestrictedAppsScreen(
             if (entries.isEmpty()) {
                 EmptyRestrictedAppsCard(cs)
             } else {
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 1.dp,
+                LiquidGlassSurface(
+                    shape = RoundedCornerShape(18.dp),
+                    cornerRadiusDp = 18.dp,
+                    strongBlur = false,
+                    tintAlpha = 0.56f,
                 ) {
                     Column {
                         val sorted = entries.sortedWith(
@@ -172,15 +179,22 @@ fun RestrictedAppsScreen(
         AlertDialog(
             onDismissRequest = { pendingRemove = null },
             title = { Text("Remove ${entry.appName}?") },
-            text = { Text("AURA will be free to act inside this app again.") },
+            text = { Text("THAKUR OS will be free to act inside this app again.") },
             confirmButton = {
-                TextButton(onClick = {
-                    store.remove(entry.packageName)
-                    pendingRemove = null
-                }) { Text("Remove") }
+                LiquidGlassButton(
+                    onClick = {
+                        store.remove(entry.packageName)
+                        pendingRemove = null
+                    },
+                    destructive = true,
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                ) { Text("Remove") }
             },
             dismissButton = {
-                TextButton(onClick = { pendingRemove = null }) { Text("Cancel") }
+                LiquidGlassButton(
+                    onClick = { pendingRemove = null },
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                ) { Text("Cancel") }
             },
         )
     }
@@ -209,10 +223,11 @@ fun RestrictedAppsScreen(
 
 @Composable
 private fun EmptyRestrictedAppsCard(cs: CapsuleScheme) {
-    Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
+    LiquidGlassSurface(
+        shape = RoundedCornerShape(18.dp),
+        cornerRadiusDp = 18.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(20.dp),
@@ -257,25 +272,26 @@ private fun RestrictedAppRow(
                     color = cs.sub,
                 )
             }
-            TextButton(
+            LiquidGlassButton(
                 onClick = onRemove,
-                colors = ButtonDefaults.textButtonColors(contentColor = cs.accent),
+                destructive = true,
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
             ) {
                 Text("Remove", style = MaterialTheme.typography.labelMedium)
             }
         }
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = entry.tier == RestrictedTier.DECLINE_ONLY,
+            LiquidGlassButton(
                 onClick = { onTierChange(RestrictedTier.DECLINE_ONLY) },
-                label = { Text("Decline") },
-            )
-            FilterChip(
-                selected = entry.tier == RestrictedTier.DISABLE_ACCESSIBILITY,
+                accentGlow = if (entry.tier == RestrictedTier.DECLINE_ONLY) LiquidPalette.SilkCyan else null,
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+            ) { Text("Decline") }
+            LiquidGlassButton(
                 onClick = { onTierChange(RestrictedTier.DISABLE_ACCESSIBILITY) },
-                label = { Text("Also disable Accessibility") },
-            )
+                accentGlow = if (entry.tier == RestrictedTier.DISABLE_ACCESSIBILITY) LiquidPalette.SilkViolet else null,
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+            ) { Text("Also disable Accessibility") }
         }
     }
 }
@@ -381,7 +397,10 @@ private fun AddRestrictedAppDialog(
         },
         confirmButton = {},
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            LiquidGlassButton(
+                onClick = onDismiss,
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+            ) { Text("Cancel") }
         },
     )
 }

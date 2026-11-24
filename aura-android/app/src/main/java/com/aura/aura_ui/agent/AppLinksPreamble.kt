@@ -35,7 +35,7 @@ object AppLinksPreamble {
 
     fun forApp(appLabel: String, entries: List<Pair<String, String>>): String? {
         if (entries.isEmpty()) return null
-        return "Direct links for $appLabel (AURA's link catalog). If one fits the goal, fill in its " +
+        return "Direct links for $appLabel (THAKUR OS's link catalog). If one fits the goal, fill in its " +
             "{slots} and open it with open_deeplink — one call instead of tapping through the app:\n" +
             entries.joinToString("\n") { (label, link) -> "- $label: $link" }
     }

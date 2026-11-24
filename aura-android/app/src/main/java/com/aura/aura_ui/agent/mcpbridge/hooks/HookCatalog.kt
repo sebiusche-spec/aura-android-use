@@ -97,7 +97,7 @@ object HookCatalog {
             phase = HookPhase.AFTER,
             key = "observed_text",
             name = "Proof Recorder",
-            description = "Keeps what AURA actually read this run, so any claim it makes can be " +
+            description = "Keeps what THAKUR OS actually read this run, so any claim it makes can be " +
                 "checked against the real screen text instead of taken on trust.",
         ),
         HookInfo(

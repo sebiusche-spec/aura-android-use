@@ -191,8 +191,8 @@ class CompanionLiveController(
             scope.launch {
                 // Chat agent-output area (visible when restored) AND the minimized pill (visible while
                 // the task runs) — same surfaces the classic voice path drives during automation.
-                viewModel.addAgentOutput("AURA", progress)
-                AuraOverlayService.getInstance()?.updateLiveNotification("AURA", progress)
+                viewModel.addAgentOutput("THAKUR OS", progress)
+                AuraOverlayService.getInstance()?.updateLiveNotification("THAKUR OS", progress)
             }
             // …and, since the fix, a THIRD consumer: the model itself. Pushed as a SILENT function
             // response so AURA knows where the task actually is without being prompted to narrate
@@ -869,7 +869,7 @@ class CompanionLiveController(
             Log.w(TAG, "live link dropped during a task — not reconnecting; task continues")
             ui {
                 AuraOverlayService.getInstance()
-                    ?.updateLiveNotification("AURA", "Lost the voice connection — still working on your task")
+                    ?.updateLiveNotification("THAKUR OS", "Lost the voice connection — still working on your task")
             }
             return
         }
@@ -979,7 +979,7 @@ class CompanionLiveController(
         Log.i(TAG, "🗣️ local barge-in — cutting the speaker, user has the floor")
         // Logged because a cut-off reply is one of the ways AURA "goes quiet" from the
         // user's side, and without a record it is indistinguishable from a dropped turn.
-        transcript.note(speaker = "system", text = "user barge-in — AURA cut off mid-reply", kind = "interrupted")
+        transcript.note(speaker = "system", text = "user barge-in — THAKUR OS cut off mid-reply", kind = "interrupted")
         // Mute the dead turn until its generationComplete lands (or the backstop expires): the
         // server has not been told anything yet and keeps streaming audio we must not play.
         interruptGate.onLocalBargeIn(now)
@@ -1024,9 +1024,9 @@ class CompanionLiveController(
         // user reads as "it can hear me". Claiming THINKING here would be the UI telling a lie.
         ui {
             viewModel.updatePhase(ConversationPhase.LISTENING)
-            viewModel.addAgentOutput("AURA", "Working on it…")
+            viewModel.addAgentOutput("THAKUR OS", "Working on it…")
             AuraOverlayService.minimize(context)
-            AuraOverlayService.getInstance()?.updateLiveNotification("AURA", "Working on it…")
+            AuraOverlayService.getInstance()?.updateLiveNotification("THAKUR OS", "Working on it…")
         }
         // The mic is normally already running; start it if the session was idle when the task began
         // (e.g. a task issued from a text turn rather than speech).

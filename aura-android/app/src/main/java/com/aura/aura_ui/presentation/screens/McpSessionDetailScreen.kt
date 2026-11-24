@@ -3,9 +3,18 @@ package com.aura.aura_ui.presentation.screens
 import android.annotation.SuppressLint
 import android.webkit.WebView
 import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -13,7 +22,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.aura.aura_ui.mcp.log.AgentRunLogger
 import com.aura.aura_ui.mcp.log.LiveConversationLogger
@@ -21,6 +33,9 @@ import com.aura.aura_ui.mcp.log.McpLogPdfExporter
 import com.aura.aura_ui.mcp.log.McpSessionStore
 import com.aura.aura_ui.mcp.log.SessionHtmlRenderer
 import com.aura.aura_ui.mcp.log.SessionLog
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
+import com.aura.aura_ui.presentation.components.LiquidPalette
+import com.aura.aura_ui.presentation.components.SilkMeshBackground
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -60,13 +75,15 @@ fun McpSessionDetailScreen(
         }
     }
     when (native) {
-        null -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
+        null -> Box(Modifier.fillMaxSize().background(LiquidPalette.DeepNight), Alignment.Center) {
+            SilkMeshBackground()
+            CircularProgressIndicator(color = LiquidPalette.SilkCyan)
+        }
         true -> AgentTraceScreen(sessionId, onNavigateBack)
         false -> McpWebViewDetailScreen(sessionId, onNavigateBack)
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun McpWebViewDetailScreen(
     sessionId: String,
@@ -94,18 +111,65 @@ private fun McpWebViewDetailScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Session detail") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+    Box(modifier = Modifier.fillMaxSize()) {
+        SilkMeshBackground()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding(),
+        ) {
+            LiquidGlassSurface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                shape = RoundedCornerShape(22.dp),
+                cornerRadiusDp = 22.dp,
+                strongBlur = true,
+                tintAlpha = 0.56f,
+                prismIntensity = 1.05f,
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    LiquidGlassSurface(
+                        modifier = Modifier.size(38.dp),
+                        shape = CircleShape,
+                        cornerRadiusDp = 19.dp,
+                        strongBlur = false,
+                        tintAlpha = 0.5f,
+                        onClick = onNavigateBack,
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
                     }
-                },
-                actions = {
-                    IconButton(
-                        enabled = !exporting && session != null,
+
+                    Text(
+                        text = "Session detail",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White,
+                        modifier = Modifier.weight(1f),
+                    )
+
+                    val canExport = !exporting && session != null
+                    LiquidGlassSurface(
+                        modifier = Modifier.size(38.dp),
+                        shape = CircleShape,
+                        cornerRadiusDp = 19.dp,
+                        strongBlur = false,
+                        tintAlpha = if (canExport) 0.54f else 0.30f,
+                        prismIntensity = if (canExport) 1.05f else 0.35f,
+                        accentGlow = if (canExport) LiquidPalette.SilkCyan else null,
+                        enabled = canExport,
                         onClick = {
                             exporting = true
                             scope.launch {
@@ -121,27 +185,42 @@ private fun McpWebViewDetailScreen(
                             }
                         },
                     ) {
-                        Icon(Icons.Filled.PictureAsPdf, contentDescription = "Export PDF")
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            if (exporting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = LiquidPalette.SilkCyan,
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Filled.PictureAsPdf,
+                                    contentDescription = "Export PDF",
+                                    tint = if (canExport) LiquidPalette.SilkCyan else Color.White.copy(alpha = 0.45f),
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
                     }
-                },
-            )
-        },
-    ) { padding ->
-        val content = html
-        when {
-            session == null && html == null ->
-                Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) {
-                    CircularProgressIndicator()
                 }
-            content == null ->
-                Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) {
-                    Text("Session not found.")
-                }
-            else -> SessionWebView(
-                html = content,
-                baseUrl = baseUrl,
-                modifier = Modifier.fillMaxSize().padding(padding),
-            )
+            }
+
+            val content = html
+            when {
+                session == null && html == null ->
+                    Box(Modifier.fillMaxSize(), Alignment.Center) {
+                        CircularProgressIndicator(color = LiquidPalette.SilkCyan)
+                    }
+                content == null ->
+                    Box(Modifier.fillMaxSize(), Alignment.Center) {
+                        Text("Session not found.", color = Color.White)
+                    }
+                else -> SessionWebView(
+                    html = content,
+                    baseUrl = baseUrl,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
     }
 }

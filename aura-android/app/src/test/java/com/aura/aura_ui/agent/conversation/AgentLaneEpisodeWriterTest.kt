@@ -45,7 +45,7 @@ class AgentLaneEpisodeWriterTest {
         assertEquals(1, all.count { it.type == MemoryType.EPISODE })
         assertTrue(all.any { it.type == MemoryType.USER && it.text == "likes biryani" })
         assertTrue(all.any { it.type == MemoryType.STYLE })
-        assertTrue(summarizer.transcripts.single().startsWith("User: order biryani\nAURA: Ordered."))
+        assertTrue(summarizer.transcripts.single().startsWith("User: order biryani\nTHAKUR OS: Ordered."))
     }
 
     @Test fun `the same messages are never summarized twice when the overlay hides again`() = runTest {
@@ -58,7 +58,7 @@ class AgentLaneEpisodeWriterTest {
         advanceUntilIdle()
 
         assertEquals(2, summarizer.transcripts.size)
-        assertEquals("User: thanks\nAURA: Anytime.\nUser: bye", summarizer.transcripts[1])
+        assertEquals("User: thanks\nTHAKUR OS: Anytime.\nUser: bye", summarizer.transcripts[1])
     }
 
     @Test fun `an excluded conversation (benchmark or Live) writes nothing, and only that one`() = runTest {
@@ -71,7 +71,7 @@ class AgentLaneEpisodeWriterTest {
         writer.onConversationEnded(chat + next)
         advanceUntilIdle()
 
-        assertEquals(listOf("User: hi\nAURA: hey\nUser: what's up"), summarizer.transcripts)
+        assertEquals(listOf("User: hi\nTHAKUR OS: hey\nUser: what's up"), summarizer.transcripts)
     }
 
     @Test fun `a single command is a task-log line, not a diary entry`() {

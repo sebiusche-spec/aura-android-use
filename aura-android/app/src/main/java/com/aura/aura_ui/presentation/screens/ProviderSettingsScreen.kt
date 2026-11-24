@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -24,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -48,6 +50,9 @@ import com.aura.aura_ui.agent.memory.EncryptedJsonStore
 import com.aura.aura_ui.mcp.bridge.CustomEndpointStore
 import com.aura.aura_ui.mcp.bridge.ProviderKeyStore
 import com.aura.aura_ui.presentation.components.AuraScreenScaffold
+import com.aura.aura_ui.presentation.components.LiquidGlassButton
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
+import com.aura.aura_ui.presentation.components.LiquidPalette
 import com.aura.aura_ui.presentation.components.MonoSegmented
 import com.aura.aura_ui.presentation.components.MonoSwitch
 import com.aura.aura_ui.presentation.components.rememberMonoScheme
@@ -228,12 +233,23 @@ fun ProviderSettingsScreen(
                     visualTransformation = if (revealed) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     trailingIcon = {
-                        IconButton(onClick = { revealed = !revealed }) {
-                            Icon(
-                                imageVector = if (revealed) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = if (revealed) "Hide key" else "Show key",
-                                tint = cs.sub,
-                            )
+                        LiquidGlassSurface(
+                            modifier = Modifier.size(34.dp),
+                            shape = CircleShape,
+                            cornerRadiusDp = 17.dp,
+                            strongBlur = false,
+                            tintAlpha = 0.45f,
+                            accentGlow = LiquidPalette.SilkCyan,
+                            onClick = { revealed = !revealed },
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Icon(
+                                    imageVector = if (revealed) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = if (revealed) "Hide key" else "Show key",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
                         }
                     },
                     placeholder = { Text(endpoint.keyHint) },
@@ -315,7 +331,7 @@ fun ProviderSettingsScreen(
                 }
                 if (selectedIsNonVision) {
                     AttentionBanner(
-                        message = "This model has no vision support. AURA can't read the " +
+                        message = "This model has no vision support. THAKUR OS can't read the " +
                             "screen with it — pick a model marked with the eye icon.",
                         cs = cs,
                     )
@@ -393,9 +409,10 @@ fun ProviderSettingsScreen(
             }
 
             if (endpoint.keyUrl.isNotBlank()) {
-                TextButton(
+                LiquidGlassButton(
                     onClick = { uriHandler.openUri(endpoint.keyUrl) },
-                    colors = ButtonDefaults.textButtonColors(contentColor = cs.accent),
+                    accentGlow = LiquidPalette.SilkCyan,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
                 ) {
                     Text("Get a ${endpoint.displayName} key →")
                 }
@@ -409,10 +426,12 @@ fun ProviderSettingsScreen(
             )
 
             EyebrowLabel("MORE", cs)
-            Surface(
+            LiquidGlassSurface(
                 shape = Capsule.ShapeCard,
-                color = cs.card,
-                border = BorderStroke(1.dp, cs.line),
+                cornerRadiusDp = 22.dp,
+                strongBlur = false,
+                tintAlpha = 0.56f,
+                prismIntensity = 0.85f,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Column {
@@ -423,15 +442,15 @@ fun ProviderSettingsScreen(
                         cs = cs,
                         onClick = onOpenTrustedDevices,
                     )
-                    HorizontalDivider(color = cs.line, modifier = Modifier.padding(start = 56.dp))
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.10f), modifier = Modifier.padding(start = 56.dp))
                     CapsuleNavRow(
                         icon = Icons.Filled.Block,
                         title = "Restricted Apps",
-                        subtitle = "Apps AURA declines to act in — banking, payments, auth",
+                        subtitle = "Apps THAKUR OS declines to act in — banking, payments, auth",
                         cs = cs,
                         onClick = onOpenRestrictedApps,
                     )
-                    HorizontalDivider(color = cs.line, modifier = Modifier.padding(start = 56.dp))
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.10f), modifier = Modifier.padding(start = 56.dp))
                     CapsuleNavRow(
                         icon = Icons.Filled.History,
                         title = "Activity Log",
@@ -439,7 +458,7 @@ fun ProviderSettingsScreen(
                         cs = cs,
                         onClick = onOpenActivityLog,
                     )
-                    HorizontalDivider(color = cs.line, modifier = Modifier.padding(start = 56.dp))
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.10f), modifier = Modifier.padding(start = 56.dp))
                     CapsuleNavRow(
                         icon = Icons.Filled.Schedule,
                         title = "Log Retention",
@@ -468,18 +487,18 @@ fun ProviderSettingsScreen(
     }
 }
 
-/** Field colors that make OutlinedTextFields speak the Capsule language (ink border, no purple). */
+/** Field colors harmonizing OutlinedTextFields with the dark Liquid Glass theme. */
 @Composable
 private fun capsuleFieldColors(cs: CapsuleScheme) = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor = cs.ink,
-    unfocusedBorderColor = cs.line,
-    cursorColor = cs.accent,
-    focusedLabelColor = cs.ink,
-    unfocusedLabelColor = cs.sub,
-    focusedTextColor = cs.ink,
-    unfocusedTextColor = cs.ink,
-    focusedContainerColor = cs.card,
-    unfocusedContainerColor = cs.card,
+    focusedBorderColor = LiquidPalette.SilkCyan,
+    unfocusedBorderColor = Color.White.copy(alpha = 0.24f),
+    cursorColor = LiquidPalette.SilkCyan,
+    focusedLabelColor = LiquidPalette.SilkCyan,
+    unfocusedLabelColor = Color.White.copy(alpha = 0.65f),
+    focusedTextColor = Color.White,
+    unfocusedTextColor = Color.White,
+    focusedContainerColor = Color(0xFF0E1424).copy(alpha = 0.72f),
+    unfocusedContainerColor = Color(0xFF0E1424).copy(alpha = 0.56f),
 )
 
 /** Small uppercase eyebrow above a control, matching the Capsule section labels. */
@@ -492,7 +511,7 @@ private fun EyebrowLabel(text: String, cs: CapsuleScheme) {
     )
 }
 
-/** The ink pill — Capsule's primary action button (charcoal capsule + light content). */
+/** Primary Liquid Glass action button. */
 @Composable
 private fun PrimaryPill(
     text: String,
@@ -503,35 +522,28 @@ private fun PrimaryPill(
     loading: Boolean = false,
     loadingText: String? = null,
 ) {
-    Surface(
+    LiquidGlassButton(
         onClick = onClick,
         enabled = enabled && !loading,
-        shape = Capsule.ShapePill,
-        color = if (enabled) cs.capsule else cs.line,
+        accentGlow = LiquidPalette.SilkCyan,
         modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 15.dp),
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 15.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
-        ) {
-            if (loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp,
-                    color = cs.onCapsule,
-                )
-            }
-            Text(
-                text = if (loading) (loadingText ?: text) else text,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = if (enabled) cs.onCapsule else cs.sub,
+        if (loading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                strokeWidth = 2.dp,
+                color = Color.White,
             )
         }
+        Text(
+            text = if (loading) (loadingText ?: text) else text,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+        )
     }
 }
 
-/** Outlined pill — Capsule's secondary/neutral action (hairline on canvas). */
+/** Secondary Liquid Glass neutral action button. */
 @Composable
 private fun SecondaryPill(
     text: String,
@@ -540,27 +552,22 @@ private fun SecondaryPill(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    Surface(
+    LiquidGlassButton(
         onClick = onClick,
         enabled = enabled,
-        shape = Capsule.ShapePill,
-        color = androidx.compose.ui.graphics.Color.Transparent,
-        border = BorderStroke(1.dp, if (enabled) cs.line else cs.line.copy(alpha = 0.5f)),
+        accentGlow = LiquidPalette.SilkViolet,
         modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 15.dp),
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = if (enabled) cs.ink else cs.sub,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 15.dp),
         )
     }
 }
 
-/** Destructive pill — soft accent field with accent content (remove/delete rows). */
+/** Destructive Liquid Glass pill button (remove/delete rows). */
 @Composable
 private fun DestructivePill(
     text: String,
@@ -568,24 +575,17 @@ private fun DestructivePill(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
+    LiquidGlassButton(
         onClick = onClick,
-        shape = Capsule.ShapePill,
-        color = cs.accentSoft,
+        destructive = true,
         modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
     ) {
-        Row(
-            modifier = Modifier.padding(vertical = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(Icons.Default.Delete, contentDescription = null, tint = cs.accent, modifier = Modifier.size(18.dp))
-            Text(
-                text = text,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = cs.accent,
-            )
-        }
+        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+        )
     }
 }
 
@@ -685,17 +685,18 @@ private fun CustomEndpointEditor(
             }
         },
         confirmButton = {
-            TextButton(
-                colors = ButtonDefaults.textButtonColors(contentColor = cs.accent),
+            LiquidGlassButton(
+                accentGlow = LiquidPalette.SilkCyan,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 onClick = {
                     if (name.isBlank() || baseUrl.isBlank() || modelsUrl.isBlank()) {
-                        error = "Name, base URL, and models URL are required."; return@TextButton
+                        error = "Name, base URL, and models URL are required."; return@LiquidGlassButton
                     }
                     // https-only, with the localhost carve-out for local endpoints (Ollama/LM Studio).
                     val baseOk = McpUrlValidator.validate(baseUrl.trim(), allowLocalhostDebug = true)
                     val modelsOk = McpUrlValidator.validate(modelsUrl.trim(), allowLocalhostDebug = true)
                     val failure = baseOk.exceptionOrNull() ?: modelsOk.exceptionOrNull()
-                    if (failure != null) { error = failure.message ?: "Invalid URL"; return@TextButton }
+                    if (failure != null) { error = failure.message ?: "Invalid URL"; return@LiquidGlassButton }
                     onSave(
                         LlmEndpoint(
                             id = CustomEndpointStore.newCustomId(name),
@@ -715,9 +716,9 @@ private fun CustomEndpointEditor(
             ) { Text("Save") }
         },
         dismissButton = {
-            TextButton(
+            LiquidGlassButton(
                 onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(contentColor = cs.sub),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             ) { Text("Cancel") }
         },
     )
@@ -830,13 +831,16 @@ private fun ModelDropdown(
     }
 }
 
-/** Quiet status card at the top of the screen (white sheet, accent only in the icon). */
+/** Liquid Glass status card at the top of the screen. */
 @Composable
 private fun StatusBanner(cs: CapsuleScheme, providerName: String, isConfigured: Boolean) {
-    Surface(
+    LiquidGlassSurface(
         shape = Capsule.ShapeCard,
-        color = cs.card,
-        border = BorderStroke(1.dp, cs.line),
+        cornerRadiusDp = 22.dp,
+        strongBlur = true,
+        tintAlpha = 0.56f,
+        prismIntensity = 1.0f,
+        accentGlow = if (isConfigured) LiquidPalette.SilkCyan else LiquidPalette.SilkViolet,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
@@ -844,23 +848,26 @@ private fun StatusBanner(cs: CapsuleScheme, providerName: String, isConfigured: 
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(Capsule.ShapeChipWell)
-                    .background(cs.accentSoft),
-                contentAlignment = Alignment.Center,
+            LiquidGlassSurface(
+                modifier = Modifier.size(38.dp),
+                shape = Capsule.ShapeChipWell,
+                cornerRadiusDp = 12.dp,
+                strongBlur = false,
+                tintAlpha = 0.52f,
+                accentGlow = if (isConfigured) LiquidPalette.SilkCyan else LiquidPalette.WorkOrange,
             ) {
-                Icon(
-                    imageVector = if (isConfigured) Icons.Default.CheckCircle else Icons.Default.Warning,
-                    contentDescription = null,
-                    tint = if (isConfigured) cs.ok else cs.accent,
-                    modifier = Modifier.size(20.dp),
-                )
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(
+                        imageVector = if (isConfigured) Icons.Default.CheckCircle else Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = if (isConfigured) LiquidPalette.SilkCyan else LiquidPalette.WorkOrange,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
             }
             Text(
                 text = if (isConfigured) "$providerName is configured and ready." else "Paste a key, fetch models, and pick one to enable the agent.",
-                color = cs.ink,
+                color = Color.White,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
             )
@@ -873,35 +880,41 @@ private fun StatusBanner(cs: CapsuleScheme, providerName: String, isConfigured: 
  * Change together: the same note in `OnboardingScreen.GeminiKeyStep`.
  */
 private const val GEMINI_PRESET_NOTE =
-    "Gemini is just the starting preset. How well AURA completes tasks depends on the model you " +
+    "Gemini is just the starting preset. How well THAKUR OS completes tasks depends on the model you " +
         "pick here, and any provider works. We default to Gemini because the same free key also " +
         "unlocks Gemini Live, a natural voice assistant at no cost."
 
-/** Neutral explanatory note: card sheet, info icon, no accent (it is not a problem). */
+/** Neutral explanatory note inside Liquid Glass. */
 @Composable
 private fun InfoNote(message: String, cs: CapsuleScheme) {
-    Surface(
+    LiquidGlassSurface(
         shape = Capsule.ShapeChipWell,
-        color = cs.card,
-        border = BorderStroke(1.dp, cs.line),
+        cornerRadiusDp = 12.dp,
+        strongBlur = false,
+        tintAlpha = 0.50f,
+        prismIntensity = 0.7f,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Icon(Icons.Default.Info, contentDescription = null, tint = cs.sub, modifier = Modifier.size(18.dp))
-            Text(message, color = cs.ink, fontSize = 13.sp, lineHeight = 18.sp)
+            Icon(Icons.Default.Info, contentDescription = null, tint = LiquidPalette.SilkCyan, modifier = Modifier.size(18.dp))
+            Text(message, color = Color.White.copy(alpha = 0.88f), fontSize = 13.sp, lineHeight = 18.sp)
         }
     }
 }
 
-/** Soft-accent inline banner for real problems (fetch failed, non-vision model). */
+/** Warm-amber Liquid Glass inline banner for real problems (fetch failed, non-vision model). */
 @Composable
 private fun AttentionBanner(message: String, cs: CapsuleScheme) {
-    Surface(
+    LiquidGlassSurface(
         shape = Capsule.ShapeChipWell,
-        color = cs.accentSoft,
+        cornerRadiusDp = 12.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+        prismIntensity = 0.95f,
+        accentGlow = LiquidPalette.WorkOrange,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
@@ -909,8 +922,8 @@ private fun AttentionBanner(message: String, cs: CapsuleScheme) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Icon(Icons.Default.Warning, contentDescription = null, tint = cs.accent, modifier = Modifier.size(20.dp))
-            Text(message, color = cs.ink, fontSize = 13.sp)
+            Icon(Icons.Default.Warning, contentDescription = null, tint = LiquidPalette.WorkOrange, modifier = Modifier.size(20.dp))
+            Text(message, color = Color.White, fontSize = 13.sp)
         }
     }
 }

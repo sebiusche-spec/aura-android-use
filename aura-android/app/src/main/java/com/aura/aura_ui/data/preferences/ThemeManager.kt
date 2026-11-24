@@ -123,6 +123,8 @@ object ThemeManager {
 
     fun updateWakeWord(enabled: Boolean) {
         _enableWakeWord.value = enabled
+        appContext?.getSharedPreferences("aura_settings", Context.MODE_PRIVATE)
+            ?.edit()?.putBoolean("wake_word_enabled", enabled)?.apply()
     }
 
     // Mock functions for buttons

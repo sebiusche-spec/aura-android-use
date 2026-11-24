@@ -64,11 +64,11 @@ fun PermissionsHealthScreen(
 
     AuraScreenScaffold(
         title = "Permissions",
-        subtitle = "What AURA can use, and why",
+        subtitle = "What THAKUR OS can use, and why",
         onBack = onNavigateBack,
         modifier = modifier,
     ) {
-        MonoSectionLabel("Core — needed for AURA to work", scheme)
+        MonoSectionLabel("Core — needed for THAKUR OS to work", scheme)
         MonoCardGroup(scheme) {
             PermissionRegistry.tier1.forEachIndexed { index, p ->
                 if (index > 0) MonoDivider()

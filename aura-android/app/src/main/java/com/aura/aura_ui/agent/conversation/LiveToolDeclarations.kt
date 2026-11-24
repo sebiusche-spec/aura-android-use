@@ -73,7 +73,7 @@ object LiveToolDeclarations {
             put("behavior", "NON_BLOCKING")
             put(
                 "description",
-                "Ask AURA's reasoning brain to handle anything that is not one of the instant " +
+                "Ask THAKUR OS's reasoning brain to handle anything that is not one of the instant " +
                     "device controls above: questions, remembering things, reminders, searching " +
                     "the web, reading notifications, calling or messaging someone, and anything " +
                     "at all involving apps or the screen. This is also how you SEE the phone — " +

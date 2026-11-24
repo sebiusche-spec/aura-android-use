@@ -22,6 +22,9 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -30,13 +33,11 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -56,12 +57,16 @@ import com.aura.aura_ui.agent.conversation.CompanionConfig
 import com.aura.aura_ui.agent.conversation.LiveModelResolver
 import com.aura.aura_ui.audio.AuraTTSManager
 import com.aura.aura_ui.presentation.components.ColumnScopeMarker
+import com.aura.aura_ui.presentation.components.LiquidGlassButton
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
+import com.aura.aura_ui.presentation.components.LiquidPalette
 import com.aura.aura_ui.presentation.components.MonoCardGroup
 import com.aura.aura_ui.presentation.components.MonoDivider
 import com.aura.aura_ui.presentation.components.MonoRow
 import com.aura.aura_ui.presentation.components.MonoSectionLabel
 import com.aura.aura_ui.presentation.components.MonoSegmented
 import com.aura.aura_ui.presentation.components.MonoTopBar
+import com.aura.aura_ui.presentation.components.SilkMeshBackground
 import com.aura.aura_ui.presentation.components.rememberMonoScheme
 import com.aura.aura_ui.presentation.utils.AuraHapticType
 import com.aura.aura_ui.presentation.utils.rememberHapticFeedback
@@ -116,28 +121,27 @@ fun VoiceSettingsScreen(modifier: Modifier = Modifier) {
     val liveInUse = remember { companion.useGeminiLive && companion.byokKey() != null }
     var tab by rememberSaveable { mutableIntStateOf(if (liveInUse) 1 else 0) }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(scheme.canvas),
-    ) {
-        MonoTopBar(
-            title = "Voice",
-            subtitle = "In use: " + if (liveInUse) "Gemini Live" else "On-device",
-            scheme = scheme,
-        )
-        MonoSegmented(
-            options = listOf("On-device", "Gemini Live"),
-            selectedIndex = tab,
-            onSelect = { tab = it },
-            scheme = scheme,
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(bottom = 4.dp),
-        )
-        when (tab) {
-            0 -> OnDeviceTab(scheme)
-            else -> GeminiLiveTab(scheme, companion)
+    Box(modifier = modifier.fillMaxSize()) {
+        SilkMeshBackground()
+        Column(modifier = Modifier.fillMaxSize()) {
+            MonoTopBar(
+                title = "Voice",
+                subtitle = "In use: " + if (liveInUse) "Gemini Live" else "On-device",
+                scheme = scheme,
+            )
+            MonoSegmented(
+                options = listOf("On-device", "Gemini Live"),
+                selectedIndex = tab,
+                onSelect = { tab = it },
+                scheme = scheme,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(bottom = 4.dp),
+            )
+            when (tab) {
+                0 -> OnDeviceTab(scheme)
+                else -> GeminiLiveTab(scheme, companion)
+            }
         }
     }
 }
@@ -228,16 +232,42 @@ private fun ColumnScopeMarker.VoiceRow(
         onClick = { onSelect(state == LocalVoiceModels.State.Ready) },
         trailing = {
             when (val st = state) {
-                LocalVoiceModels.State.Ready -> Row {
-                    IconButton(onClick = onPlayToggle) {
-                        Icon(
-                            imageVector = if (playing) Icons.Default.Stop else Icons.Default.PlayArrow,
-                            contentDescription = if (playing) "Stop preview" else "Preview ${voice.name}",
-                            tint = scheme.textPrimary,
-                        )
+                LocalVoiceModels.State.Ready -> Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    LiquidGlassSurface(
+                        modifier = Modifier.size(34.dp),
+                        shape = CircleShape,
+                        cornerRadiusDp = 17.dp,
+                        strongBlur = false,
+                        tintAlpha = 0.45f,
+                        accentGlow = if (playing) LiquidPalette.SilkCyan else null,
+                        onClick = onPlayToggle,
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                imageVector = if (playing) Icons.Default.Stop else Icons.Default.PlayArrow,
+                                contentDescription = if (playing) "Stop preview" else "Preview ${voice.name}",
+                                tint = scheme.textPrimary,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
                     }
-                    IconButton(onClick = { confirmDelete = true }) {
-                        Icon(Icons.Outlined.Delete, contentDescription = "Delete ${voice.name}", tint = scheme.textSecondary)
+                    LiquidGlassSurface(
+                        modifier = Modifier.size(34.dp),
+                        shape = CircleShape,
+                        cornerRadiusDp = 17.dp,
+                        strongBlur = false,
+                        tintAlpha = 0.45f,
+                        accentGlow = LiquidPalette.DangerRed,
+                        onClick = { confirmDelete = true },
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                Icons.Outlined.Delete,
+                                contentDescription = "Delete ${voice.name}",
+                                tint = scheme.textSecondary,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
                     }
                 }
                 is LocalVoiceModels.State.Downloading -> DownloadProgress(st.progress, scheme)
@@ -281,7 +311,11 @@ private fun ColumnScopeMarker.ModelRow(
         trailing = {
             when (val st = state) {
                 LocalVoiceModels.State.Ready ->
-                    TextButton(onClick = { confirmDelete = true }) { Text("Delete", color = scheme.textSecondary) }
+                    LiquidGlassButton(
+                        onClick = { confirmDelete = true },
+                        destructive = true,
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    ) { Text("Delete") }
                 is LocalVoiceModels.State.Downloading -> DownloadProgress(st.progress, scheme)
                 LocalVoiceModels.State.Missing, is LocalVoiceModels.State.Failed ->
                     DownloadButton(retry = st is LocalVoiceModels.State.Failed, scheme) {
@@ -310,8 +344,12 @@ private fun DownloadProgress(progress: Float, scheme: MonoScheme) {
 
 @Composable
 private fun DownloadButton(retry: Boolean, scheme: MonoScheme, onClick: () -> Unit) {
-    TextButton(onClick = onClick) {
-        Text(if (retry) "Retry" else "Download", color = scheme.textPrimary, fontWeight = FontWeight.SemiBold)
+    LiquidGlassButton(
+        onClick = onClick,
+        accentGlow = LiquidPalette.SilkCyan,
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 7.dp),
+    ) {
+        Text(if (retry) "Retry" else "Download", fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -322,9 +360,18 @@ private fun ConfirmDeleteDialog(name: String, approxMb: Int, onDismiss: () -> Un
         title = { Text("Delete $name?") },
         text = { Text("Frees $approxMb MB. You can download it again any time.") },
         confirmButton = {
-            TextButton(onClick = { onConfirm(); onDismiss() }) { Text("Delete", color = Mono.Blood) }
+            LiquidGlassButton(
+                onClick = { onConfirm(); onDismiss() },
+                destructive = true,
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+            ) { Text("Delete") }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = {
+            LiquidGlassButton(
+                onClick = onDismiss,
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+            ) { Text("Cancel") }
+        },
     )
 }
 
@@ -375,16 +422,15 @@ private fun GeminiLiveTab(scheme: MonoScheme, companion: CompanionConfig) {
 
 @Composable
 private fun VoiceChip(label: String, selected: Boolean, scheme: MonoScheme, onClick: () -> Unit) {
-    Surface(
+    LiquidGlassButton(
         onClick = onClick,
-        shape = Mono.ShapePill,
-        color = if (selected) Mono.Ink else scheme.chip,
+        accentGlow = if (selected) LiquidPalette.SilkCyan else null,
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,
-            color = if (selected) Mono.TextOnInk else scheme.textPrimary,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            color = if (selected) LiquidPalette.SilkCyan else Color.White,
         )
     }
 }
@@ -469,8 +515,9 @@ private fun LiveModelPicker(scheme: MonoScheme, cfg: CompanionConfig, modifier: 
             }
         }
 
-        TextButton(
+        LiquidGlassButton(
             enabled = !fetching,
+            accentGlow = LiquidPalette.SilkCyan,
             onClick = {
                 scope.launch {
                     fetching = true
@@ -488,12 +535,12 @@ private fun LiveModelPicker(scheme: MonoScheme, cfg: CompanionConfig, modifier: 
             },
         ) {
             if (fetching) {
-                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Mono.Ink)
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
                 Spacer(Modifier.width(8.dp))
             }
             Text(
                 if (models.isEmpty()) "Fetch Live models" else "Refresh (${models.size})",
-                color = scheme.textPrimary,
+                color = Color.White,
             )
         }
         error?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = Mono.Blood) }

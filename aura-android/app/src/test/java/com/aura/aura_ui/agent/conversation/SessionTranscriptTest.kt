@@ -15,7 +15,7 @@ class SessionTranscriptTest {
         assertEquals(2, t.userTurnCount())
         val r = t.render()
         assertTrue(r.contains("User: what's the weather"))
-        assertTrue(r.contains("AURA: Sunny."))
+        assertTrue(r.contains("THAKUR OS: Sunny."))
         assertTrue(r.indexOf("what's the weather") < r.indexOf("thanks"))
     }
 
@@ -150,7 +150,7 @@ class SessionTranscriptTest {
         val (t, _) = transcriptAt()
         t.addUser("one"); t.addModel("two"); t.addUser("three"); t.addModel("four")
 
-        assertEquals("User: three\nAURA: four", t.recent(2))
+        assertEquals("User: three\nTHAKUR OS: four", t.recent(2))
     }
 
     @Test

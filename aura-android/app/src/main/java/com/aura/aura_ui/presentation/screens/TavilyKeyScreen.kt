@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -28,6 +29,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aura.aura_ui.mcp.bridge.TavilyKeyStore
+import com.aura.aura_ui.presentation.components.LiquidGlassButton
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
+import com.aura.aura_ui.presentation.components.LiquidPalette
 
 /**
  * Settings screen for the Tavily API key used by the on-device `web_search` MCP tool.
@@ -54,12 +58,30 @@ fun TavilyKeyScreen(
     val isConfigured = keyText.isNotBlank()
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = { Text("Web Search (Tavily)") },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    LiquidGlassSurface(
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .size(40.dp),
+                        shape = CircleShape,
+                        cornerRadiusDp = 20.dp,
+                        strongBlur = false,
+                        tintAlpha = 0.50f,
+                        onClick = onNavigateBack,
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
                     }
                 },
             )
@@ -81,7 +103,7 @@ fun TavilyKeyScreen(
                 fontSize = 16.sp,
             )
             Text(
-                text = "AURA's web_search tool fetches live documentation from the open " +
+                text = "THAKUR OS's web_search tool fetches live documentation from the open " +
                     "web — for example, when you ask 'create a WhatsApp group', it looks " +
                     "up the official steps before planning the on-screen taps. This needs " +
                     "a free Tavily API key.",
@@ -101,12 +123,25 @@ fun TavilyKeyScreen(
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
-                    IconButton(onClick = { revealed = !revealed }) {
-                        Icon(
-                            imageVector = if (revealed) Icons.Default.VisibilityOff
-                            else Icons.Default.Visibility,
-                            contentDescription = if (revealed) "Hide key" else "Show key",
-                        )
+                    LiquidGlassSurface(
+                        modifier = Modifier
+                            .padding(end = 4.dp)
+                            .size(34.dp),
+                        shape = CircleShape,
+                        cornerRadiusDp = 17.dp,
+                        strongBlur = false,
+                        tintAlpha = 0.44f,
+                        onClick = { revealed = !revealed },
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (revealed) Icons.Default.VisibilityOff
+                                else Icons.Default.Visibility,
+                                contentDescription = if (revealed) "Hide key" else "Show key",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
                     }
                 },
                 placeholder = { Text("tvly-...") },
@@ -117,23 +152,25 @@ fun TavilyKeyScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Button(
+                LiquidGlassButton(
                     onClick = {
                         keyStore.setApiKey(keyText.trim())
                         savedAt = System.currentTimeMillis()
                     },
                     enabled = keyText.isNotBlank(),
+                    accentGlow = LiquidPalette.SilkCyan,
                     modifier = Modifier.weight(1f),
                 ) {
                     Text("Save")
                 }
-                OutlinedButton(
+                LiquidGlassButton(
                     onClick = {
                         keyStore.clear()
                         keyText = ""
                         savedAt = null
                     },
                     enabled = isConfigured,
+                    destructive = true,
                     modifier = Modifier.weight(1f),
                 ) {
                     Text("Clear")
@@ -150,8 +187,10 @@ fun TavilyKeyScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            TextButton(
+            LiquidGlassButton(
                 onClick = { uriHandler.openUri("https://tavily.com/") },
+                accentGlow = LiquidPalette.SilkViolet,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
             ) {
                 Text("Get a free key at tavily.com →")
             }
@@ -169,38 +208,38 @@ fun TavilyKeyScreen(
 
 @Composable
 private fun StatusBanner(isConfigured: Boolean) {
-    val bg = if (isConfigured) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.errorContainer
-    }
-    val fg = if (isConfigured) {
-        MaterialTheme.colorScheme.onPrimaryContainer
-    } else {
-        MaterialTheme.colorScheme.onErrorContainer
-    }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(bg)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    val accent = if (isConfigured) LiquidPalette.SilkCyan else LiquidPalette.DangerRed
+    val fg = if (isConfigured) LiquidPalette.SilkCyan else Color(0xFFFF8CA0)
+    LiquidGlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        cornerRadiusDp = 16.dp,
+        strongBlur = false,
+        tintAlpha = 0.50f,
+        prismIntensity = 1.0f,
+        accentGlow = accent,
     ) {
-        Icon(
-            imageVector = if (isConfigured) Icons.Default.CheckCircle else Icons.Default.Warning,
-            contentDescription = null,
-            tint = fg,
-        )
-        Text(
-            text = if (isConfigured) {
-                "web_search is enabled."
-            } else {
-                "web_search is disabled — paste a Tavily key below."
-            },
-            color = fg,
-            fontWeight = FontWeight.Medium,
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(
+                imageVector = if (isConfigured) Icons.Default.CheckCircle else Icons.Default.Warning,
+                contentDescription = null,
+                tint = fg,
+            )
+            Text(
+                text = if (isConfigured) {
+                    "web_search is enabled."
+                } else {
+                    "web_search is disabled — paste a Tavily key below."
+                },
+                color = Color.White,
+                fontWeight = FontWeight.Medium,
+            )
+        }
     }
 }

@@ -49,7 +49,7 @@ object BrowserPreamble {
             if (tab.active) "$who [active]" else who
         }
 
-        return "[open browser tabs] AURA's browser already has these open: $lines. " +
+        return "[open browser tabs] THAKUR OS's browser already has these open: $lines. " +
             "If your task continues from one of them, do NOT call browser_open again — it is " +
             "already loaded. Use browser_read to see the current page, or browser_find / " +
             "browser_act to work on it. Open a NEW tab only when you genuinely need two pages " +

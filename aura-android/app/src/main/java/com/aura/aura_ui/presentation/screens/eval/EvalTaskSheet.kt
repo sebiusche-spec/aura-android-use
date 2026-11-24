@@ -105,7 +105,7 @@ fun EvalTaskSheet(
 
             if (result.outcome.isNotBlank()) {
                 Spacer(Modifier.height(12.dp))
-                SheetCard(title = if (result.status == EvalStatus.ERROR) "What went wrong" else "What AURA said") {
+                SheetCard(title = if (result.status == EvalStatus.ERROR) "What went wrong" else "What THAKUR OS said") {
                     Text(
                         result.outcome,
                         style = MaterialTheme.typography.bodySmall,
@@ -116,7 +116,7 @@ fun EvalTaskSheet(
                     if (result.status == EvalStatus.AWAITING_SCORE) {
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "This is what AURA claims. Check the phone, not this text.",
+                            "This is what THAKUR OS claims. Check the phone, not this text.",
                             style = MaterialTheme.typography.labelSmall,
                             color = scheme.textSecondary,
                         )

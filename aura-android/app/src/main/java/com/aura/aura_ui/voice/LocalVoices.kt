@@ -13,7 +13,7 @@ object LocalVoices {
     }
 
     const val DEFAULT_ID = "en-US-AriaNeural"
-    const val PREVIEW_TEXT = "Hi, I'm AURA. Tell me what you need and I'll take care of it."
+    const val PREVIEW_TEXT = "Hi, I'm THAKUR OS. Tell me what you need and I'll take care of it."
 
     val all = listOf(
         Voice("en-US-AriaNeural", "Lessac", "American", "Female", "en_US-lessac-medium"),

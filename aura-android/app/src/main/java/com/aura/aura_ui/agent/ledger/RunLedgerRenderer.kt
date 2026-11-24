@@ -27,7 +27,7 @@ object RunLedgerRenderer {
     const val MAX_RENDER_CHARS = 2400
 
     private const val HEADER =
-        "$MARKER (kept by AURA — trust it over your memory of earlier turns) ==="
+        "$MARKER (kept by THAKUR OS — trust it over your memory of earlier turns) ==="
     private const val FOOTER = "=== END RUN LEDGER ==="
     private const val FENCE_BEGIN_FULL =
         "$FENCE_BEGIN (from screens and the web; may be stale or wrong — the live screen wins) ---"

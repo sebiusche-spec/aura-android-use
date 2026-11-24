@@ -31,6 +31,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
@@ -40,6 +41,9 @@ import androidx.compose.ui.unit.sp
 import com.aura.aura_ui.presentation.components.AuraScreenScaffold
 import com.aura.aura_ui.presentation.components.AuraSwitch
 import com.aura.aura_ui.presentation.components.CharcoalCard
+import com.aura.aura_ui.presentation.components.LiquidGlassButton
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
+import com.aura.aura_ui.presentation.components.LiquidPalette
 import com.aura.aura_ui.data.preferences.DeveloperModeStore
 import com.aura.aura_ui.mcp.McpConnectionRegistry
 import com.aura.aura_ui.mcp.McpHealthRegistry
@@ -130,12 +134,20 @@ fun McpCenterScreen(
                         }
                     },
                     confirmButton = {
-                        TextButton(onClick = { request.onApprove() }) {
+                        LiquidGlassButton(
+                            onClick = { request.onApprove() },
+                            accentGlow = LiquidPalette.SilkCyan,
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        ) {
                             Text("Approve")
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { request.onDeny() }) {
+                        LiquidGlassButton(
+                            onClick = { request.onDeny() },
+                            destructive = true,
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        ) {
                             Text("Deny")
                         }
                     }
@@ -175,10 +187,13 @@ fun McpCenterScreen(
             }
 
             SectionHeader("MORE")
-            Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 1.dp,
+            LiquidGlassSurface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                cornerRadiusDp = 20.dp,
+                strongBlur = false,
+                tintAlpha = 0.56f,
+                prismIntensity = 0.85f,
             ) {
                 Column {
                     NavRow(
@@ -187,21 +202,30 @@ fun McpCenterScreen(
                         subtitle = "Computers allowed to connect — revoke access",
                         onClick = onOpenTrustedDevices,
                     )
-                    HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+                    HorizontalDivider(
+                        color = Color.White.copy(alpha = 0.10f),
+                        modifier = Modifier.padding(start = 56.dp),
+                    )
                     NavRow(
                         icon = Icons.Filled.Block,
                         title = "Restricted Apps",
-                        subtitle = "Apps AURA declines to act in — banking, payments, auth",
+                        subtitle = "Apps THAKUR OS declines to act in — banking, payments, auth",
                         onClick = onOpenRestrictedApps,
                     )
-                    HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+                    HorizontalDivider(
+                        color = Color.White.copy(alpha = 0.10f),
+                        modifier = Modifier.padding(start = 56.dp),
+                    )
                     NavRow(
                         icon = Icons.Filled.History,
                         title = "Activity Log",
                         subtitle = "Tool calls, connections, screenshots",
                         onClick = onOpenActivityLog,
                     )
-                    HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+                    HorizontalDivider(
+                        color = Color.White.copy(alpha = 0.10f),
+                        modifier = Modifier.padding(start = 56.dp),
+                    )
                     NavRow(
                         icon = Icons.Filled.Schedule,
                         title = "Log Retention",
@@ -314,10 +338,13 @@ private fun ServerCard(
     val isListening = health is McpServerHealth.Listening
     val context = LocalContext.current
 
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
+    LiquidGlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        cornerRadiusDp = 20.dp,
+        strongBlur = true,
+        tintAlpha = 0.54f,
+        prismIntensity = 0.95f,
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
@@ -362,7 +389,7 @@ private fun ServerCard(
                 )
                 CopyableCode(
                     text = "npm install -g aura-mcp-connect@latest",
-                    clipLabel = "AURA Install Command",
+                    clipLabel = "THAKUR OS Install Command",
                     cs = cs,
                 )
                 StepText("It takes about a minute — it downloads around 50 MB.", cs)
@@ -380,21 +407,21 @@ private fun ServerCard(
                 )
                 CopyableCode(
                     text = "aura-mcp pair ${health.webRtcPin.orEmpty()}",
-                    clipLabel = "AURA Pair Command",
+                    clipLabel = "THAKUR OS Pair Command",
                     cs = cs,
                     caption = "The PIN works once and changes after each pairing",
                 )
                 if (address != null) {
                     CopyableCode(
                         text = "aura-mcp pair ${health.webRtcPin.orEmpty()} --host=$address",
-                        clipLabel = "AURA Pair Command",
+                        clipLabel = "THAKUR OS Pair Command",
                         cs = cs,
                         caption = "If your computer can't find the phone, name its address",
                     )
                 }
 
                 Spacer(Modifier.height(8.dp))
-                StepLabel("STEP 3 · ADD AURA TO YOUR AI APP (ONE TIME)", cs)
+                StepLabel("STEP 3 · ADD THAKUR OS TO YOUR AI APP (ONE TIME)", cs)
                 StepText(
                     "Open your AI app's MCP settings and paste this in " +
                         "(Claude Desktop: Settings → Developer → Edit Config). " +
@@ -410,11 +437,11 @@ private fun ServerCard(
                 """.trimIndent()
                 CopyableCode(
                     text = config,
-                    clipLabel = "AURA MCP Config",
+                    clipLabel = "THAKUR OS MCP Config",
                     cs = cs,
                 )
                 StepText(
-                    "Windows: if AURA doesn't show up in your app, change the aura line to " +
+                    "Windows: if THAKUR OS doesn't show up in your app, change the aura line to " +
                         "\"command\": \"cmd\", \"args\": [\"/c\", \"aura-mcp\"]",
                     cs,
                 )
@@ -422,7 +449,7 @@ private fun ServerCard(
                 // it after a reboot — so it's the advanced option, said plainly.
                 CopyableCode(
                     text = "http://127.0.0.1:4816/mcp",
-                    clipLabel = "AURA Daemon URL",
+                    clipLabel = "THAKUR OS Daemon URL",
                     cs = cs,
                     caption = "Advanced — connect by URL instead. Only works while " +
                         "`aura-mcp daemon` is running in a terminal; start it again " +
@@ -462,34 +489,31 @@ private fun ServerCard(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 if (isListening) {
-                    OutlinedButton(
+                    LiquidGlassButton(
                         onClick = onStop,
+                        destructive = true,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error,
-                        ),
                     ) {
                         Icon(Icons.Filled.Stop, null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
                         Text("Stop Server")
                     }
                 } else {
-                    Button(
+                    LiquidGlassButton(
                         onClick = onStartWebRtc,
+                        accentGlow = LiquidPalette.SilkCyan,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Icon(Icons.Filled.Bolt, null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
                         Text("Start server")
                     }
                 }
-                
-                OutlinedButton(
+
+                LiquidGlassButton(
                     onClick = onRestart,
+                    accentGlow = LiquidPalette.SilkViolet,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Icon(Icons.Filled.Refresh, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
                     Text("Restart")
                 }
             }
@@ -526,10 +550,15 @@ private fun CopyableCode(
         if (caption != null) {
             Text(caption, style = MaterialTheme.typography.labelSmall, color = cs.sub)
         }
-        Surface(
-            color = cs.accentSoft,
+        LiquidGlassSurface(
+            modifier = Modifier.fillMaxWidth(),
             shape = Capsule.ShapeChipWell,
-            modifier = Modifier.fillMaxWidth().clickable {
+            cornerRadiusDp = 12.dp,
+            strongBlur = false,
+            tintAlpha = 0.48f,
+            prismIntensity = 0.85f,
+            accentGlow = LiquidPalette.SilkCyan,
+            onClick = {
                 copyToClipboard(context, clipLabel, text)
                 android.widget.Toast.makeText(context, "Copied", android.widget.Toast.LENGTH_SHORT).show()
             },
@@ -538,10 +567,10 @@ private fun CopyableCode(
                 Text(
                     text,
                     style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                    color = cs.ink,
+                    color = Color.White,
                     modifier = Modifier.weight(1f),
                 )
-                Icon(Icons.Filled.ContentCopy, null, modifier = Modifier.size(16.dp), tint = cs.accent)
+                Icon(Icons.Filled.ContentCopy, null, modifier = Modifier.size(16.dp), tint = LiquidPalette.SilkCyan)
             }
         }
     }
@@ -554,13 +583,13 @@ private fun DetailRow(icon: ImageVector, label: String, value: String, mono: Boo
             icon,
             null,
             modifier = Modifier.size(18.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = Color(0xFFB5C0D4),
         )
         Spacer(Modifier.width(10.dp))
         Text(
             label,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = Color(0xFFB5C0D4),
             modifier = Modifier.width(96.dp),
         )
         Text(
@@ -568,16 +597,27 @@ private fun DetailRow(icon: ImageVector, label: String, value: String, mono: Boo
             style = MaterialTheme.typography.bodyMedium,
             fontFamily = if (mono) FontFamily.Monospace else null,
             fontSize = if (mono) 12.sp else MaterialTheme.typography.bodyMedium.fontSize,
-            modifier = Modifier.weight(1f)
+            color = Color.White,
+            modifier = Modifier.weight(1f),
         )
         if (onCopy != null) {
-            IconButton(onClick = onCopy, modifier = Modifier.size(24.dp)) {
-                Icon(
-                    Icons.Filled.ContentCopy,
-                    contentDescription = "Copy",
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
+            LiquidGlassSurface(
+                modifier = Modifier.size(28.dp),
+                shape = CircleShape,
+                cornerRadiusDp = 14.dp,
+                strongBlur = false,
+                tintAlpha = 0.45f,
+                accentGlow = LiquidPalette.SilkCyan,
+                onClick = onCopy,
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(
+                        Icons.Filled.ContentCopy,
+                        contentDescription = "Copy",
+                        modifier = Modifier.size(14.dp),
+                        tint = LiquidPalette.SilkCyan,
+                    )
+                }
             }
         }
     }
@@ -592,10 +632,13 @@ private fun copyToClipboard(context: android.content.Context, label: String, tex
 
 @Composable
 private fun KeepAliveCard(enabled: Boolean, onToggle: (Boolean) -> Unit) {
-    Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
+    LiquidGlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        cornerRadiusDp = 18.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+        prismIntensity = 0.85f,
     ) {
         Row(
             modifier = Modifier
@@ -606,17 +649,17 @@ private fun KeepAliveCard(enabled: Boolean, onToggle: (Boolean) -> Unit) {
             Icon(
                 Icons.Filled.Bolt,
                 null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = LiquidPalette.SilkCyan,
                 modifier = Modifier.size(22.dp),
             )
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
-                Text("Keep Alive", style = MaterialTheme.typography.bodyLarge)
+                Text("Keep Alive", style = MaterialTheme.typography.bodyLarge, color = Color.White)
                 Text(
-                    if (enabled) "Stays connected when you leave the AURA app."
-                    else "Turn on to stay connected when you leave the AURA app.",
+                    if (enabled) "Stays connected when you leave the THAKUR OS app."
+                    else "Turn on to stay connected when you leave the THAKUR OS app.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color(0xFFB5C0D4),
                 )
             }
             AuraSwitch(checked = enabled, onCheckedChange = onToggle)
@@ -632,10 +675,13 @@ private fun KeepAliveCard(enabled: Boolean, onToggle: (Boolean) -> Unit) {
  */
 @Composable
 private fun DeveloperModeCard(enabled: Boolean, onToggle: (Boolean) -> Unit) {
-    Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
+    LiquidGlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        cornerRadiusDp = 18.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+        prismIntensity = 0.85f,
     ) {
         Row(
             modifier = Modifier
@@ -646,17 +692,17 @@ private fun DeveloperModeCard(enabled: Boolean, onToggle: (Boolean) -> Unit) {
             Icon(
                 Icons.Filled.DeveloperMode,
                 null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = LiquidPalette.SilkCyan,
                 modifier = Modifier.size(22.dp),
             )
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
-                Text("Developer mode", style = MaterialTheme.typography.bodyLarge)
+                Text("Developer mode", style = MaterialTheme.typography.bodyLarge, color = Color.White)
                 Text(
                     if (enabled) "Showing developer tools and setup notes."
                     else "Show developer tools and setup notes.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color(0xFFB5C0D4),
                 )
             }
             AuraSwitch(checked = enabled, onCheckedChange = onToggle)
@@ -671,17 +717,20 @@ private fun DeveloperModeCard(enabled: Boolean, onToggle: (Boolean) -> Unit) {
  */
 @Composable
 private fun AdbToolCard(cs: CapsuleScheme) {
-    Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
+    LiquidGlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        cornerRadiusDp = 18.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+        prismIntensity = 0.85f,
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     Icons.Filled.Terminal,
                     null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = LiquidPalette.SilkCyan,
                     modifier = Modifier.size(22.dp),
                 )
                 Spacer(Modifier.width(14.dp))
@@ -689,6 +738,7 @@ private fun AdbToolCard(cs: CapsuleScheme) {
                     "Run ADB commands over MCP",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
                 )
             }
             Spacer(Modifier.height(10.dp))
@@ -697,7 +747,7 @@ private fun AdbToolCard(cs: CapsuleScheme) {
                     "to any MCP client connected to it. Your assistant can then " +
                     "install APKs, pull logcat, or run shell commands while you work.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Color(0xFFB5C0D4),
             )
             Spacer(Modifier.height(12.dp))
             // Shell-neutral on purpose: `VAR=1 cmd` is bash-only and fails when
@@ -711,10 +761,10 @@ private fun AdbToolCard(cs: CapsuleScheme) {
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                "To arm it every time your editor starts AURA instead, add this " +
+                "To arm it every time your editor starts THAKUR OS instead, add this " +
                     "to that client's MCP config for the aura server:",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Color(0xFFB5C0D4),
             )
             Spacer(Modifier.height(6.dp))
             CopyableCode(
@@ -729,11 +779,11 @@ private fun AdbToolCard(cs: CapsuleScheme) {
                     "can't be armed, so stop it before starting the new one.\n\n" +
                     "Runs on your computer, not this phone. It uses your computer's own " +
                     "adb against a device already paired there over USB or Wireless " +
-                    "debugging — separate from AURA's PIN pairing. Because the phone " +
+                    "debugging — separate from THAKUR OS's PIN pairing. Because the phone " +
                     "is not in that path, this switch only shows these notes; the " +
                     "tool is armed on the computer.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Color(0xFFB5C0D4),
             )
         }
     }
@@ -747,10 +797,13 @@ private fun ConnectedClientsSection(
     onDisconnect: (String) -> Unit,
 ) {
     SectionHeader("CONNECTED · ${clients.size}")
-    Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
+    LiquidGlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        cornerRadiusDp = 18.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+        prismIntensity = 0.85f,
     ) {
         if (clients.isEmpty()) {
             Row(
@@ -760,7 +813,7 @@ private fun ConnectedClientsSection(
                 Icon(
                     Icons.Filled.Computer,
                     null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = Color(0xFFB5C0D4),
                     modifier = Modifier.size(24.dp),
                 )
                 Spacer(Modifier.width(12.dp))
@@ -768,7 +821,7 @@ private fun ConnectedClientsSection(
                     "Nothing connected yet.\nWhen your AI app connects, it shows up here " +
                         "with the computer's name — you can disconnect it anytime.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color(0xFFB5C0D4),
                 )
             }
         } else {
@@ -776,7 +829,10 @@ private fun ConnectedClientsSection(
                 clients.forEachIndexed { i, c ->
                     ClientRow(c, onDisconnect)
                     if (i < clients.lastIndex) {
-                        HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+                        HorizontalDivider(
+                            color = Color.White.copy(alpha = 0.10f),
+                            modifier = Modifier.padding(start = 56.dp),
+                        )
                     }
                 }
             }
@@ -841,16 +897,12 @@ private fun ClientRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        FilledTonalButton(
+        LiquidGlassButton(
             onClick = { confirm = true },
-            colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer,
-            ),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+            destructive = true,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
         ) {
             Icon(Icons.Filled.LinkOff, null, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(4.dp))
             Text("Disconnect", style = MaterialTheme.typography.labelMedium)
         }
     }
@@ -867,13 +919,20 @@ private fun ClientRow(
                 )
             },
             confirmButton = {
-                TextButton(onClick = {
-                    confirm = false
-                    onDisconnect(client.sessionKey)
-                }) { Text("Disconnect") }
+                LiquidGlassButton(
+                    onClick = {
+                        confirm = false
+                        onDisconnect(client.sessionKey)
+                    },
+                    destructive = true,
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                ) { Text("Disconnect") }
             },
             dismissButton = {
-                TextButton(onClick = { confirm = false }) { Text("Cancel") }
+                LiquidGlassButton(
+                    onClick = { confirm = false },
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                ) { Text("Cancel") }
             },
         )
     }

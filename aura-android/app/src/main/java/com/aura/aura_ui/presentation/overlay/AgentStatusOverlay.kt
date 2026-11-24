@@ -411,7 +411,7 @@ class AgentStatusOverlay(private val context: Context) {
             return
         }
         val who = when (said.speaker) {
-            AgentStatusRegistry.Speaker.AURA -> "AURA"
+            AgentStatusRegistry.Speaker.AURA -> "THAKUR OS"
             AgentStatusRegistry.Speaker.USER -> "You"
         }
         // NOT tail-trimmed. The caller hands over one sentence at a time, paced against the

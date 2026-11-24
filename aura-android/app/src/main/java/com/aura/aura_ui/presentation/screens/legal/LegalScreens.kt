@@ -56,7 +56,7 @@ fun LicensesScreen(onNavigateBack: () -> Unit, modifier: Modifier = Modifier) {
     val scheme = rememberMonoScheme()
     AuraScreenScaffold(
         title = "Open-source licenses",
-        subtitle = "AURA is built on these projects",
+        subtitle = "THAKUR OS is built on these projects",
         onBack = onNavigateBack,
         modifier = modifier,
     ) {

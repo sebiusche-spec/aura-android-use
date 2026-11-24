@@ -56,26 +56,15 @@ fun MonoPillButton(
     enabled: Boolean = true,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    val scheme = rememberMonoScheme()
-    val bg = if (scheme.isDark) Color.White else Mono.Ink
-    val fg = if (scheme.isDark) Mono.Ink else Mono.TextOnInk
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.97f else 1f,
-        animationSpec = spring(stiffness = 600f),
-        label = "pillPress",
-    )
-    Surface(
-        onClick = onClick,
-        enabled = enabled,
+    val fg = Color.White
+    LiquidGlassSurface(
+        modifier = modifier,
         shape = Mono.ShapePill,
-        color = if (enabled) bg else bg.copy(alpha = 0.4f),
-        interactionSource = interaction,
-        modifier = modifier.graphicsLayer {
-            scaleX = scale
-            scaleY = scale
-        },
+        cornerRadiusDp = 30.dp,
+        strongBlur = true,
+        tintAlpha = if (enabled) 0.54f else 0.30f,
+        prismIntensity = if (enabled) 1.15f else 0.4f,
+        onClick = if (enabled) onClick else null,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
@@ -86,14 +75,14 @@ fun MonoPillButton(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = fg,
+                    tint = if (enabled) fg else fg.copy(alpha = 0.5f),
                     modifier = Modifier.size(20.dp),
                 )
             }
             Text(
                 text = text,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = fg,
+                color = if (enabled) fg else fg.copy(alpha = 0.5f),
             )
             content?.invoke(this)
         }
@@ -101,9 +90,7 @@ fun MonoPillButton(
 }
 
 /**
- * The canonical dark hero card: ink in light theme, charcoal with a hairline
- * outline in dark (so it still reads on a black canvas). Text inside always
- * uses [Mono.TextOnInk] / [Mono.TextOnInkDim] — legible on both fills.
+ * The canonical dark hero card rendered with Liquid Glass refraction & prism edge highlights.
  */
 @Composable
 fun MonoInkCard(
@@ -111,66 +98,36 @@ fun MonoInkCard(
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    val scheme = rememberMonoScheme()
-    val fill = if (scheme.isDark) scheme.card else Mono.Ink
-    val border = if (scheme.isDark) BorderStroke(1.dp, scheme.outline) else null
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.97f else 1f,
-        animationSpec = spring(stiffness = 600f),
-        label = "cardPress",
-    )
-    val scaled = modifier.graphicsLayer {
-        scaleX = scale
-        scaleY = scale
-    }
-    if (onClick != null) {
-        Surface(
-            onClick = onClick,
-            shape = Mono.ShapeCard,
-            color = fill,
-            border = border,
-            interactionSource = interaction,
-            modifier = scaled,
-            content = content,
-        )
-    } else {
-        Surface(
-            shape = Mono.ShapeCard,
-            color = fill,
-            border = border,
-            modifier = modifier,
-            content = content,
-        )
+    LiquidGlassSurface(
+        modifier = modifier,
+        shape = Mono.ShapeCard,
+        cornerRadiusDp = 24.dp,
+        strongBlur = true,
+        tintAlpha = 0.54f,
+        prismIntensity = 1.15f,
+        onClick = onClick,
+    ) {
+        content()
     }
 }
 
-/** Plain surface card with a hairline outline — for content sitting on the canvas. */
+/** Liquid Glass card with subtle rim highlight for content sitting on the silk canvas. */
 @Composable
 fun MonoCanvasCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    val scheme = rememberMonoScheme()
-    if (onClick != null) {
-        Surface(
-            onClick = onClick,
-            shape = Mono.ShapeCard,
-            color = scheme.card,
-            border = BorderStroke(1.dp, scheme.outline),
-            modifier = modifier,
-            content = content,
-        )
-    } else {
-        Surface(
-            shape = Mono.ShapeCard,
-            color = scheme.card,
-            border = BorderStroke(1.dp, scheme.outline),
-            modifier = modifier,
-            content = content,
-        )
+    LiquidGlassSurface(
+        modifier = modifier,
+        shape = Mono.ShapeCard,
+        cornerRadiusDp = 24.dp,
+        strongBlur = false,
+        tintAlpha = 0.50f,
+        prismIntensity = 0.9f,
+        onClick = onClick,
+    ) {
+        content()
     }
 }
 

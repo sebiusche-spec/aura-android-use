@@ -1,23 +1,18 @@
 package com.aura.aura_ui.presentation.screens.onboarding
 
-import com.aura.aura_ui.BuildConfig
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import android.view.View
-import android.view.ViewGroup
-import android.webkit.WebView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -25,23 +20,20 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -51,47 +43,45 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MarkEmailRead
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.outlined.Keyboard
-import androidx.compose.material.icons.outlined.Mic
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -105,106 +95,119 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.aura.aura_ui.R
-import com.aura.aura_ui.agent.conversation.PersonaOwner
-import com.aura.aura_ui.remote.AuraSignIn
-import com.aura.aura_ui.remote.AuthState
-import com.aura.aura_ui.remote.SignInOutcome
 import com.aura.aura_ui.agent.conversation.CompanionConfig
 import com.aura.aura_ui.agent.conversation.LiveModelResolver
+import com.aura.aura_ui.agent.conversation.PersonaOwner
 import com.aura.aura_ui.agent.llm.LlmEndpointCatalog
 import com.aura.aura_ui.agent.llm.ModelCatalog
 import com.aura.aura_ui.agent.llm.RestrictedAppClassifier
+import com.aura.aura_ui.data.preferences.ThakurSecurityStore
 import com.aura.aura_ui.mcp.AppRestrictedApps
 import com.aura.aura_ui.mcp.bridge.ProviderKeyStore
-import com.aura.aura_ui.presentation.components.AiDisclaimer
-import com.aura.aura_ui.presentation.components.AuraLogoBubble
-import com.aura.aura_ui.presentation.components.AuraSwitch
-import com.aura.aura_ui.presentation.components.MonoCardGroup
-import com.aura.aura_ui.presentation.components.MonoDivider
-import com.aura.aura_ui.presentation.components.MonoRow
-import com.aura.aura_ui.presentation.components.MonoSectionLabel
+import com.aura.aura_ui.presentation.components.LiquidGlassButton
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
+import com.aura.aura_ui.presentation.components.LiquidGlassToggle
+import com.aura.aura_ui.presentation.components.LiquidPalette
+import com.aura.aura_ui.presentation.components.SilkMeshBackground
 import com.aura.aura_ui.presentation.components.permissionIcon
-import com.aura.aura_ui.presentation.components.rememberMonoScheme
-import com.aura.aura_ui.presentation.permissions.AuraPermission
 import com.aura.aura_ui.presentation.permissions.PermissionRegistry
 import com.aura.aura_ui.presentation.permissions.openPermissionSystemPage
-import com.aura.aura_ui.ui.theme.Mono
+import com.aura.aura_ui.presentation.utils.HapticUtils
+import com.aura.aura_ui.remote.AuraSignIn
+import com.aura.aura_ui.remote.AuthState
+import com.aura.aura_ui.remote.SignInOutcome
+import com.aura.aura_ui.services.WakeWordListeningService
+import com.aura.aura_ui.telemetry.AuraAnalytics
 import com.aura.aura_ui.utils.AppInventoryScanner
 import com.aura.aura_ui.utils.isLaunchable
-import com.aura.aura_ui.presentation.utils.HapticUtils
 import com.aura.mcp.bridge.RestrictedAppEntry
 import com.aura.mcp.bridge.RestrictedTier
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 // ============================================================================
-// ONBOARDING — 10-step wizard with Natural Water Droplet Ripples & Crimson Canvas:
-// 0: Cinematic Landing (Intro Text -> Natural Water Droplet Ripples + Meet AURA)
-// 1: How AURA Works (Crimson Bloom Canvas with Capabilities & Disclosure)
-// 2: Personalize & Google OAuth
-// 3: Restricted Settings (Android 13+)
-// 4: Accessibility Service (anim_accessibility.html)
-// 5: Voice & Assistant Overlay (anim_microphone.html)
-// 6: AURA Virtual Keyboard (anim_keyboard.html)
-// 7: Notifications & Live Alerts (anim_notifications.html)
-// 8: Gemini API Key Verification
-// 9: Restricted Apps Scanner
+// THAKUR OS — 5-PAGE LIQUID GLASS ONBOARDING FLOW
+//
+// 0: Welcome (Full THAKUR OS emblem, tagline, by Shivam Thakur, Next)
+// 1: What I Can Do (Think - Samajhta hu, See - Screen dekhta hu, Act - Khud kaam karta hu)
+// 2: Set Wake Word (Default "Wake up THAKUR OS" + Save)
+// 3: Set Secret Code (Encrypted phrase/PIN + ON/OFF toggle + Save)
+// 4: Ready (Configured summary, optional Device/AI Setup sheet, "Start THAKUR OS")
 // ============================================================================
 
-private const val STEP_COUNT = 10
+private const val ONBOARDING_PAGE_COUNT = 5
 
 @Composable
 fun OnboardingScreen(
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var step by remember { mutableIntStateOf(0) }
-    var keyVerified by remember { mutableStateOf(false) }
-    var policyAccepted by remember { mutableStateOf(false) }
-    val scheme = rememberMonoScheme()
     val context = LocalContext.current
-    // The funnel: which step people reach, to see where onboarding loses them (no inputs sent).
-    LaunchedEffect(step) { com.aura.aura_ui.telemetry.AuraAnalytics.onboardingStep(context, step) }
-    // Seeded from — and written straight back to — the SAME store Settings' "What should AURA
-    // call you?" field uses. It used to be a bare `remember { mutableStateOf("") }`: onboarding
-    // asked for your name, dropped it the moment the step scrolled past, and Settings then asked
-    // for it again. Persisting per keystroke (exactly as CompanionScreen does) also means the
-    // name survives backing out of onboarding or the process dying mid-flow.
-    var userName by remember { mutableStateOf(PersonaOwner.get(context).orEmpty()) }
-    // Firebase Auth persists its session, so this is already true on every launch after the
-    // first — the sign-in step then renders as "signed in as …" rather than asking again.
-    var signedInEmail by remember { mutableStateOf(AuthState.email()) }
-    // AuthState is backed by Firebase, not a Compose observable. Keep a local UI state as well
-    // so the Next button is invalidated immediately when Credential Manager returns.
-    var isSignedIn by remember { mutableStateOf(AuthState.isSignedIn()) }
-    var signingIn by remember { mutableStateOf(false) }
-    var signInError by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { ONBOARDING_PAGE_COUNT })
 
-    // Auto-refresh permissions on return from settings
+    LaunchedEffect(Unit) {
+        ThakurSecurityStore.hydrate(context)
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        AuraAnalytics.onboardingStep(context, pagerState.currentPage)
+    }
+
+    val savedWakeWord by ThakurSecurityStore.wakeWord.collectAsState()
+    val savedSecretEnabled by ThakurSecurityStore.secretEnabled.collectAsState()
+    val isWorkMode by ThakurSecurityStore.isWorkTheme.collectAsState()
+    val themeGlow = if (isWorkMode) LiquidPalette.WorkOrange else LiquidPalette.SilkViolet
+
+    var wakeWordDraft by remember(savedWakeWord) {
+        mutableStateOf(savedWakeWord.ifBlank { ThakurSecurityStore.DEFAULT_WAKE_WORD })
+    }
+    var wakeWordSavedFeedback by remember { mutableStateOf(false) }
+
+    var secretToggle by remember(savedSecretEnabled) { mutableStateOf(savedSecretEnabled) }
+    var secretDraft by remember {
+        mutableStateOf(ThakurSecurityStore.getSecretCode(context).orEmpty())
+    }
+    var secretVisible by remember { mutableStateOf(false) }
+    var secretSavedFeedback by remember { mutableStateOf(false) }
+
+    var showDeviceSetupSheet by remember { mutableStateOf(false) }
     var refreshPermissions by remember { mutableIntStateOf(0) }
+    var isSignedIn by remember { mutableStateOf(AuthState.isSignedIn()) }
+    var signedInEmail by remember { mutableStateOf(AuthState.email()) }
+    var signingIn by remember { mutableStateOf(false) }
+    var signInError by remember { mutableStateOf<String?>(null) }
+    var userName by remember { mutableStateOf(PersonaOwner.get(context).orEmpty()) }
+    var keyVerified by remember {
+        mutableStateOf(ProviderKeyStore(context.applicationContext).isConfigured(LlmEndpointCatalog.GEMINI_ID))
+    }
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -221,636 +224,1330 @@ fun OnboardingScreen(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { refreshPermissions++ }
 
-    // Step 2 is the hard gate: AURA does not run for an unsigned account. Everything below it
-    // (permissions, provider key) is wasted effort for someone who cannot pass it, so it blocks
-    // here rather than at the end.
-    // Why debug builds may skip: a contributor building from source may have no Firebase project
-    // with Google sign-in, and would otherwise be stuck on this step.
-    val signInSkippable = BuildConfig.DEBUG && !isSignedIn
-    val canProceed = (step != 1 || policyAccepted) &&
-        (step != 2 || isSignedIn || signInSkippable) &&
-        (step != 8 || keyVerified)
+    fun completeOnboarding() {
+        HapticUtils.performSuccessHaptic(context)
+        AuraAnalytics.onboardingComplete(context)
+        onDone()
+    }
 
-    // Standard Ink / TextOnInk button colors matching AURA
-    val buttonBg = if (scheme.isDark) Color.White else Mono.Ink
-    val buttonFg = if (scheme.isDark) Mono.Ink else Mono.TextOnInk
-    val onboardingCanvas = Color(0xFFFCF4E6) // Signature Cream White
-
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .background(onboardingCanvas)
-            .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout))
-            .padding(horizontal = if (step == 0) 0.dp else 20.dp),
+            .background(LiquidPalette.DeepNight),
     ) {
-        val isPermissionStep = step in 4..7
+        SilkMeshBackground(modifier = Modifier.fillMaxSize())
 
-        if (step > 0) {
-            Spacer(modifier = Modifier.height(10.dp))
+        // Ambient blue-purple neon wash matching THAKUR OS emblem
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            themeGlow.copy(alpha = 0.22f),
+                            LiquidPalette.PrismBlue.copy(alpha = 0.12f),
+                            Color.Transparent,
+                        ),
+                    ),
+                ),
+        )
 
-            // Step pager row (with Back button when on auto-advancing permission steps)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout))
+                .padding(horizontal = 20.dp),
+        ) {
+            // Top bar with optional Back + Skip pill
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                if (isPermissionStep) {
-                    Surface(
+                if (pagerState.currentPage > 0) {
+                    LiquidGlassSurface(
+                        modifier = Modifier.size(40.dp),
                         shape = CircleShape,
-                        color = Color(0xFFEFE8DA),
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .clickable { step-- },
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color(0xFF141110),
-                                modifier = Modifier.size(15.dp),
-                            )
-                        }
-                    }
-                } else {
-                    Spacer(modifier = Modifier.size(32.dp))
-                }
-
-                // Step pager pills (Monochrome style)
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    repeat(STEP_COUNT) { i ->
-                        val width by animateDpAsState(
-                            targetValue = if (i == step) 18.dp else 5.dp,
-                            label = "step_width",
-                        )
-                        val color by androidx.compose.animation.animateColorAsState(
-                            targetValue = if (i == step) buttonBg else scheme.outline.copy(alpha = 0.5f),
-                            label = "step_color",
-                        )
-                        Surface(
-                            shape = CircleShape,
-                            color = color,
-                            modifier = Modifier
-                                .height(4.dp)
-                                .width(width),
-                        ) {}
-                    }
-                }
-
-                Spacer(modifier = Modifier.size(32.dp))
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        AnimatedContent(
-            targetState = step,
-            transitionSpec = {
-                if (targetState > initialState) {
-                    (slideInHorizontally { it / 3 } + fadeIn()) togetherWith (slideOutHorizontally { -it / 3 } + fadeOut())
-                } else {
-                    (slideInHorizontally { -it / 3 } + fadeIn()) togetherWith (slideOutHorizontally { it / 3 } + fadeOut())
-                }
-            },
-            label = "onboardingStep",
-            modifier = Modifier.weight(1f),
-        ) { s ->
-            when (s) {
-                0 -> LandingStep(onAdvance = { if (step == 0) step = 1 })
-                1 -> HowAuraWorksStep(
-                    accepted = policyAccepted,
-                    onAcceptedChanged = { policyAccepted = it },
-                )
-                2 -> UserProfileAndOAuthStep(
-                    name = userName,
-                    onNameChanged = {
-                        userName = it
-                        PersonaOwner.set(context, it)
-                    },
-                    signedInEmail = signedInEmail,
-                    signedIn = isSignedIn,
-                    signingIn = signingIn,
-                    error = signInError,
-                    onSignIn = {
-                        signingIn = true
-                        signInError = null
-                        scope.launch {
-                            when (val out = AuraSignIn(context).signIn(context)) {
-                                is SignInOutcome.Success -> {
-                                    signedInEmail = out.email ?: AuthState.email()
-                                    isSignedIn = true
-                                }
-                                // Backing out of the picker is a choice, not a fault — saying
-                                // "sign-in failed" for it reads as a bug in AURA.
-                                SignInOutcome.Cancelled -> Unit
-                                SignInOutcome.NoGoogleAccount -> signInError =
-                                    "No Google account on this phone. Add one in Android " +
-                                        "Settings, then try again."
-                                is SignInOutcome.Misconfigured -> signInError = out.message
-                                is SignInOutcome.Failed -> signInError = out.message
+                        cornerRadiusDp = 20.dp,
+                        strongBlur = false,
+                        tintAlpha = 0.48f,
+                        accentGlow = themeGlow,
+                        onClick = {
+                            scope.launch {
+                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
                             }
-                            signingIn = false
-                        }
-                    },
-                )
-                3 -> RestrictedSettingsStep()
-                4 -> AccessibilityPermissionStep(
-                    refreshTrigger = refreshPermissions,
-                    onOpenSystem = { openPermissionSystemPage(context, it, onScreenCapture = {}) },
-                    onAutoAdvance = { if (step == 4) step = 5 },
-                )
-                5 -> VoiceAndOverlayPermissionStep(
-                    refreshTrigger = refreshPermissions,
-                    onRequestRuntime = { runtimeLauncher.launch(it.toTypedArray()) },
-                    onOpenSystem = { openPermissionSystemPage(context, it, onScreenCapture = {}) },
-                    onAutoAdvance = { if (step == 5) step = 6 },
-                )
-                6 -> KeyboardPermissionStep(
-                    refreshTrigger = refreshPermissions,
-                    onOpenSystem = { openPermissionSystemPage(context, it, onScreenCapture = {}) },
-                    onAutoAdvance = { if (step == 6) step = 7 },
-                )
-                7 -> NotificationsPermissionStep(
-                    refreshTrigger = refreshPermissions,
-                    onRequestRuntime = { runtimeLauncher.launch(it.toTypedArray()) },
-                    onOpenSystem = { openPermissionSystemPage(context, it, onScreenCapture = {}) },
-                    onAutoAdvance = { if (step == 7) step = 8 },
-                )
-                8 -> GeminiKeyStep(onVerifiedChanged = { keyVerified = it })
-                else -> RestrictedAppsStep()
-            }
-        }
-
-        if (step > 0 && !isPermissionStep) {
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Unified Rounded Pill Navbar (Exact size as inside app settings, clean text only, no arrow marks)
-            Surface(
-                shape = CircleShape,
-                color = if (canProceed) buttonBg else buttonBg.copy(alpha = 0.4f),
-                shadowElevation = 6.dp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .padding(bottom = 4.dp),
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = if (scheme.isDark) Color(0xFF2B2B28) else Color(0xFF222220),
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .clickable { step-- },
+                        },
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
                                 tint = Color.White,
                                 modifier = Modifier.size(18.dp),
                             )
                         }
                     }
-
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clip(CircleShape)
-                            .clickable(enabled = canProceed) {
-                                if (step < STEP_COUNT - 1) {
-                                    step++
-                                } else {
-                                    com.aura.aura_ui.telemetry.AuraAnalytics.onboardingComplete(context)
-                                    onDone()
-                                }
-                            },
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        Text(
-                            text = when (step) {
-                                1 -> if (policyAccepted) "I Understand" else "Accept Terms"
-                                2 -> when {
-                                    isSignedIn -> "Next"
-                                    signInSkippable -> "Skip (debug build)"
-                                    else -> "Sign in to continue"
-                                }
-                                3 -> "Next"
-                                4 -> "Next"
-                                5 -> "Next"
-                                6 -> "Next"
-                                7 -> "Next"
-                                8 -> if (keyVerified) "Next" else "Verify Key"
-                                else -> "Launch AURA"
-                            },
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = (-0.3).sp,
-                            ),
-                            color = buttonFg,
-                        )
-                    }
-
-                    // Balance spacing on the right
-                    Spacer(modifier = Modifier.size(44.dp))
+                } else {
+                    Spacer(Modifier.size(40.dp))
                 }
-            }
 
-            Spacer(modifier = Modifier.height(10.dp))
-        }
-    }
-}
-
-/** Standardized Embedded HTML Animation Card */
-@Composable
-fun OnboardingAnimationCard(
-    assetFileName: String,
-    modifier: Modifier = Modifier,
-    onWebViewCreated: ((WebView) -> Unit)? = null,
-) {
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = Color.Transparent,
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        AndroidView(
-            factory = { context ->
-                WebView(context).apply {
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT,
+                LiquidGlassSurface(
+                    shape = RoundedCornerShape(50),
+                    cornerRadiusDp = 16.dp,
+                    strongBlur = false,
+                    tintAlpha = 0.42f,
+                    accentGlow = LiquidPalette.PrismBlue,
+                ) {
+                    Text(
+                        text = "${pagerState.currentPage + 1} / $ONBOARDING_PAGE_COUNT",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
                     )
-                    setBackgroundColor(0x00000000)
-                    isVerticalScrollBarEnabled = false
-                    isHorizontalScrollBarEnabled = false
-                    setLayerType(View.LAYER_TYPE_HARDWARE, null)
-                    settings.apply {
-                        javaScriptEnabled = true
-                        domStorageEnabled = true
-                        allowFileAccess = true
-                        allowContentAccess = true
-                        useWideViewPort = true
-                        loadWithOverviewMode = true
-                    }
-                    loadUrl("file:///android_asset/onboarding/$assetFileName")
-                    onWebViewCreated?.invoke(this)
                 }
-            },
-            modifier = Modifier.fillMaxSize(),
-        )
-    }
-}
 
-/** Compact Clean Permission Row: Icon + Permission Name + Toggle */
-@Composable
-private fun PermissionItemRow(
-    title: String,
-    granted: Boolean,
-    icon: ImageVector,
-    onToggle: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val scheme = rememberMonoScheme()
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onToggle() }
-            .padding(horizontal = 14.dp, vertical = 9.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.weight(1f),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(scheme.chip),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    tint = scheme.chipContent,
-                    modifier = Modifier.size(17.dp),
-                )
+                if (pagerState.currentPage < ONBOARDING_PAGE_COUNT - 1) {
+                    LiquidGlassButton(
+                        onClick = {
+                            scope.launch { pagerState.animateScrollToPage(ONBOARDING_PAGE_COUNT - 1) }
+                        },
+                        accentGlow = themeGlow,
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                    ) {
+                        Text("Skip", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                } else {
+                    Spacer(Modifier.size(40.dp))
+                }
             }
-            Text(
-                title,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = scheme.textPrimary,
-            )
-        }
-        AuraSwitch(
-            checked = granted,
-            onCheckedChange = { onToggle() },
-        )
-    }
-}
 
-/** Floating Meaningful Reason Card: Black BG + Red Icon + Crisp White Text + Muted Subtitle */
-@Composable
-private fun FloatingReasonCard(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = Color(0xFF141110),
-        border = BorderStroke(1.dp, Color(0xFF2C2825)),
-        shadowElevation = 2.dp,
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp),
-        ) {
-            Box(
+            // 5-Page Swipeable Onboarding Pager
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier
-                    .size(26.dp)
-                    .clip(RoundedCornerShape(7.dp))
-                    .background(Color(0xFF261818)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    tint = Color(0xFFD62828), // Crisp Wine/Red
-                    modifier = Modifier.size(14.dp),
-                )
-            }
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp,
-                        letterSpacing = (-0.2).sp,
-                    ),
-                    color = Color(0xFFFFFDF8),
-                    maxLines = 1,
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 8.5.sp,
-                        lineHeight = 11.sp,
-                    ),
-                    color = Color(0xFFB0AAA0),
-                    maxLines = 2,
-                )
-            }
-        }
-    }
-}
-
-// ── Step 0: Landing Step (Full-screen Cinematic Intro -> Meet AURA with Red Rings & Compact Pill Button)
-@Composable
-private fun LandingStep(onAdvance: () -> Unit) {
-    val scheme = rememberMonoScheme()
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var isMeetAuraScene by remember { mutableStateOf(false) }
-    var isRetracting by remember { mutableStateOf(false) }
-    var webViewRef by remember { mutableStateOf<WebView?>(null) }
-
-    LaunchedEffect(Unit) {
-        delay(4400) // matches the extended cinematic intro animation timing
-        isMeetAuraScene = true
-        HapticUtils.performOverlayChimeHaptic(context)
-    }
-
-    val buttonBg = if (scheme.isDark) Color.White else Mono.Ink
-    val buttonFg = if (scheme.isDark) Mono.Ink else Mono.TextOnInk
-
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomCenter,
-    ) {
-        OnboardingAnimationCard(
-            assetFileName = "anim_landing.html",
-            modifier = Modifier.fillMaxSize(),
-            onWebViewCreated = { webViewRef = it },
-        )
-
-        AnimatedVisibility(
-            visible = isMeetAuraScene && !isRetracting,
-            enter = fadeIn(tween(600)) + slideInVertically(tween(600)) { it / 2 },
-            exit = fadeOut(tween(250)) + slideOutVertically(tween(250)) { it / 2 },
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 28.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = buttonBg,
-                    shadowElevation = 6.dp,
-                    modifier = Modifier
-                        .height(48.dp)
-                        .clip(CircleShape)
-                        .clickable {
-                            if (!isRetracting) {
-                                isRetracting = true
-                                HapticUtils.performSuccessHaptic(context)
-                                webViewRef?.evaluateJavascript("window.retractHero && window.retractHero();", null)
-                                scope.launch {
-                                    delay(360)
-                                    onAdvance()
+                    .weight(1f)
+                    .fillMaxWidth(),
+            ) { page ->
+                when (page) {
+                    0 -> WelcomeOnboardingPage(
+                        themeGlow = themeGlow,
+                        onNext = {
+                            scope.launch { pagerState.animateScrollToPage(1) }
+                        },
+                    )
+                    1 -> WhatICanDoPage(
+                        themeGlow = themeGlow,
+                        onNext = {
+                            scope.launch { pagerState.animateScrollToPage(2) }
+                        },
+                    )
+                    2 -> WakeWordOnboardingPage(
+                        wakeWordDraft = wakeWordDraft,
+                        savedFeedback = wakeWordSavedFeedback,
+                        themeGlow = themeGlow,
+                        onDraftChange = {
+                            wakeWordDraft = it
+                            wakeWordSavedFeedback = false
+                        },
+                        onResetDefault = {
+                            wakeWordDraft = ThakurSecurityStore.DEFAULT_WAKE_WORD
+                            ThakurSecurityStore.setWakeWord(context, ThakurSecurityStore.DEFAULT_WAKE_WORD)
+                            WakeWordListeningService.reloadWakeWord(context)
+                            wakeWordSavedFeedback = true
+                        },
+                        onSave = {
+                            HapticUtils.performSuccessHaptic(context)
+                            ThakurSecurityStore.setWakeWord(context, wakeWordDraft)
+                            WakeWordListeningService.reloadWakeWord(context)
+                            wakeWordSavedFeedback = true
+                        },
+                        onNext = {
+                            ThakurSecurityStore.setWakeWord(context, wakeWordDraft)
+                            WakeWordListeningService.reloadWakeWord(context)
+                            scope.launch { pagerState.animateScrollToPage(3) }
+                        },
+                    )
+                    3 -> SecretCodeOnboardingPage(
+                        secretEnabled = secretToggle,
+                        secretDraft = secretDraft,
+                        secretVisible = secretVisible,
+                        savedFeedback = secretSavedFeedback,
+                        themeGlow = themeGlow,
+                        onToggleEnabled = { enabled ->
+                            secretToggle = enabled
+                            ThakurSecurityStore.setSecretEnabled(context, enabled)
+                            secretSavedFeedback = false
+                        },
+                        onSecretChange = {
+                            secretDraft = it
+                            secretSavedFeedback = false
+                        },
+                        onToggleVisibility = { secretVisible = !secretVisible },
+                        onSave = {
+                            HapticUtils.performSuccessHaptic(context)
+                            val clean = secretDraft.trim()
+                            if (clean.isNotEmpty()) {
+                                ThakurSecurityStore.setSecretCode(context, clean)
+                                if (clean.all { it.isDigit() }) {
+                                    ThakurSecurityStore.setPinCode(context, clean)
                                 }
                             }
+                            ThakurSecurityStore.setSecretEnabled(context, secretToggle)
+                            secretSavedFeedback = true
                         },
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 34.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        Text(
-                            text = "Get Started",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = (-0.3).sp,
-                            ),
-                            color = buttonFg,
-                        )
-                    }
+                        onNext = {
+                            val clean = secretDraft.trim()
+                            if (clean.isNotEmpty()) {
+                                ThakurSecurityStore.setSecretCode(context, clean)
+                                if (clean.all { it.isDigit() }) {
+                                    ThakurSecurityStore.setPinCode(context, clean)
+                                }
+                            }
+                            ThakurSecurityStore.setSecretEnabled(context, secretToggle)
+                            scope.launch { pagerState.animateScrollToPage(4) }
+                        },
+                    )
+                    else -> ReadyOnboardingPage(
+                        wakeWord = savedWakeWord,
+                        secretEnabled = savedSecretEnabled,
+                        isSignedIn = isSignedIn,
+                        keyVerified = keyVerified,
+                        refreshPermissions = refreshPermissions,
+                        themeGlow = themeGlow,
+                        onOpenDeviceSetup = { showDeviceSetupSheet = true },
+                        onStart = ::completeOnboarding,
+                    )
                 }
             }
+
+            // Bottom Animated Neon Dot Indicators
+            OnboardingDotsIndicator(
+                pageCount = ONBOARDING_PAGE_COUNT,
+                currentPage = pagerState.currentPage,
+                accentColor = themeGlow,
+                onSelectPage = { index ->
+                    scope.launch { pagerState.animateScrollToPage(index) }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(vertical = 14.dp),
+            )
+        }
+
+        // Optional Full-Setup Liquid Glass Modal (Account · Permissions · Gemini Key · App Guard)
+        AnimatedVisibility(
+            visible = showDeviceSetupSheet,
+            enter = fadeIn(tween(240)) + scaleIn(initialScale = 0.94f),
+            exit = fadeOut(tween(180)) + scaleOut(targetScale = 0.94f),
+        ) {
+            DeviceSetupLiquidModal(
+                name = userName,
+                onNameChanged = {
+                    userName = it
+                    PersonaOwner.set(context, it)
+                },
+                signedInEmail = signedInEmail,
+                signedIn = isSignedIn,
+                signingIn = signingIn,
+                signInError = signInError,
+                onSignIn = {
+                    signingIn = true
+                    signInError = null
+                    scope.launch {
+                        when (val out = AuraSignIn(context).signIn(context)) {
+                            is SignInOutcome.Success -> {
+                                signedInEmail = out.email ?: AuthState.email()
+                                isSignedIn = true
+                            }
+                            SignInOutcome.Cancelled -> Unit
+                            SignInOutcome.NoGoogleAccount -> signInError =
+                                "No Google account on this phone. Add one in Android Settings, then try again."
+                            is SignInOutcome.Misconfigured -> signInError = out.message
+                            is SignInOutcome.Failed -> signInError = out.message
+                        }
+                        signingIn = false
+                    }
+                },
+                refreshTrigger = refreshPermissions,
+                onRequestRuntime = { runtimeLauncher.launch(it.toTypedArray()) },
+                onOpenSystem = { openPermissionSystemPage(context, it, onScreenCapture = {}) },
+                onVerifiedChanged = { keyVerified = it },
+                onDismiss = { showDeviceSetupSheet = false },
+            )
         }
     }
 }
 
-@Composable
-private fun FeatureBadge(text: String) {
-    val scheme = rememberMonoScheme()
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = scheme.chip,
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-            color = scheme.textPrimary,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-        )
-    }
-}
+// ── Page 1: Welcome ──────────────────────────────────────────────────────────
 
-// ── Step 1: How AURA Works (Clean Mono Settings Screen Language) ────────────
 @Composable
-private fun HowAuraWorksStep(
-    accepted: Boolean,
-    onAcceptedChanged: (Boolean) -> Unit,
+private fun WelcomeOnboardingPage(
+    themeGlow: Color,
+    onNext: () -> Unit,
 ) {
-    val scheme = rememberMonoScheme()
-    val uriHandler = LocalUriHandler.current
+    val infinite = rememberInfiniteTransition(label = "welcomeGlow")
+    val pulse by infinite.animateFloat(
+        initialValue = 0.72f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "welcomePulse",
+    )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(bottom = 12.dp),
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(Modifier.height(6.dp))
 
-        // Header
-        Text(
-            text = "How AURA Works",
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = (-0.8).sp,
-            ),
-            color = scheme.textPrimary,
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Autonomous execution with on-device safety guard rails.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = scheme.textSecondary,
-        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            // Full branding logo inside glowing neon Liquid Glass frame
+            Box(contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier
+                        .size(244.dp)
+                        .scale(0.95f + 0.08f * pulse)
+                        .blur(32.dp, BlurredEdgeTreatment.Unbounded)
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(
+                                    LiquidPalette.PrismBlue.copy(alpha = 0.44f * pulse),
+                                    themeGlow.copy(alpha = 0.36f * pulse),
+                                    Color.Transparent,
+                                ),
+                            ),
+                            CircleShape,
+                        ),
+                )
+                LiquidGlassSurface(
+                    modifier = Modifier.size(224.dp),
+                    shape = RoundedCornerShape(34.dp),
+                    cornerRadiusDp = 34.dp,
+                    strongBlur = true,
+                    tintAlpha = 0.44f,
+                    prismIntensity = 1.35f,
+                    accentGlow = LiquidPalette.PrismBlue,
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.thakur_brand_full),
+                        contentDescription = "THAKUR OS Brand",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(6.dp)
+                            .clip(RoundedCornerShape(28.dp)),
+                    )
+                }
+            }
 
-        Spacer(modifier = Modifier.height(14.dp))
+            Spacer(Modifier.height(22.dp))
 
-        // Grouped Capabilities (Exact Settings Page MonoCardGroup UI)
-        MonoSectionLabel("Capabilities", scheme)
-        MonoCardGroup(scheme) {
-            MonoRow(
-                icon = Icons.Filled.Visibility,
-                title = "Sees your screen",
-                subtitle = "Reads UI elements only while executing your tasks",
+            Text(
+                text = "THAKUR OS",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.6.sp,
+                ),
+                color = Color.White,
+                textAlign = TextAlign.Center,
             )
-            MonoDivider()
-            MonoRow(
-                icon = Icons.Outlined.Mic,
-                title = "Speaks like a person",
-                subtitle = "Natural conversation powered by Gemini Live",
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = "THINK  •  SEE  •  ACT  •  COMPLETE",
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 2.sp,
+                ),
+                color = LiquidPalette.PrismBlue,
+                textAlign = TextAlign.Center,
             )
-            MonoDivider()
-            MonoRow(
-                icon = Icons.Filled.TouchApp,
-                title = "Acts on its own",
-                subtitle = "Performs taps, swipes, and typing securely",
-            )
-            MonoDivider()
-            MonoRow(
-                icon = Icons.Filled.Shield,
-                title = "Stays on your phone",
-                subtitle = "Private keys; sensitive banking apps permanently off-limits",
-            )
+
+            Spacer(Modifier.height(8.dp))
+
+            LiquidGlassSurface(
+                shape = RoundedCornerShape(50),
+                cornerRadiusDp = 16.dp,
+                strongBlur = false,
+                tintAlpha = 0.42f,
+                accentGlow = themeGlow,
+            ) {
+                Text(
+                    text = "by Shivam Thakur",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.5.sp,
+                    ),
+                    color = Color(0xFFE0C8FF),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(Modifier.height(16.dp))
 
-        // Grouped Agreement Card
-        MonoSectionLabel("Agreement", scheme)
-        Surface(
-            shape = Mono.ShapeCard,
-            color = scheme.card,
+        LiquidGlassButton(
+            onClick = onNext,
+            accentGlow = LiquidPalette.PrismBlue,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onAcceptedChanged(!accepted) },
+                .height(54.dp),
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = if (accepted) scheme.textPrimary else Color.Transparent,
-                    border = BorderStroke(1.5.dp, if (accepted) scheme.textPrimary else scheme.outline),
-                    modifier = Modifier.size(22.dp),
-                ) {
-                    AnimatedVisibility(
-                        visible = accepted,
-                        enter = scaleIn(),
-                        exit = scaleOut(),
+            Text(
+                text = "Next",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
+}
+
+// ── Page 2: What I Can Do ────────────────────────────────────────────────────
+
+private data class CapabilityShowcase(
+    val title: String,
+    val subtitle: String,
+    val icon: ImageVector,
+    val accent: Color,
+    val phaseOffset: Float,
+)
+
+@Composable
+private fun WhatICanDoPage(
+    themeGlow: Color,
+    onNext: () -> Unit,
+) {
+    val cards = remember {
+        listOf(
+            CapabilityShowcase(
+                title = "Think - Samajhta hu",
+                subtitle = "Natural Hindi, Hinglish & English commands ko samajh kar smart plan banata hai.",
+                icon = Icons.Outlined.Psychology,
+                accent = LiquidPalette.SilkViolet,
+                phaseOffset = 0f,
+            ),
+            CapabilityShowcase(
+                title = "See - Screen dekhta hu",
+                subtitle = "Aapki active screen, apps aur buttons ko safely read karke context samajhta hai.",
+                icon = Icons.Filled.Visibility,
+                accent = LiquidPalette.PrismBlue,
+                phaseOffset = 0.33f,
+            ),
+            CapabilityShowcase(
+                title = "Act - Khud kaam karta hu",
+                subtitle = "Taps, typing, scrolling aur multi-app workflows bina haath lagaye complete karta hai.",
+                icon = Icons.Filled.TouchApp,
+                accent = LiquidPalette.SilkCyan,
+                phaseOffset = 0.66f,
+            ),
+        )
+    }
+
+    val infinite = rememberInfiniteTransition(label = "capPulse")
+    val animPhase by infinite.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2600, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "capAnimPhase",
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = 8.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column {
+            Text(
+                text = "What I Can Do",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.5).sp,
+                ),
+                color = Color.White,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "THAKUR OS thinks, sees, and executes across your phone",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFFB5C4E4),
+            )
+            Spacer(Modifier.height(18.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                cards.forEach { card ->
+                    val wave = kotlin.math.sin((animPhase + card.phaseOffset) * 2f * kotlin.math.PI.toFloat())
+                    val floatOffsetDp = (wave * 3f).dp
+                    val badgeScale = 1f + wave * 0.06f
+
+                    LiquidGlassSurface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .graphicsLayer { translationY = floatOffsetDp.toPx() },
+                        shape = RoundedCornerShape(22.dp),
+                        cornerRadiusDp = 22.dp,
+                        strongBlur = true,
+                        tintAlpha = 0.56f,
+                        prismIntensity = 1.25f,
+                        accentGlow = card.accent,
+                        onClick = {},
                     ) {
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Icon(
-                                Icons.Filled.CheckCircle,
-                                contentDescription = null,
-                                tint = scheme.canvas,
-                                modifier = Modifier.size(16.dp),
-                            )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(54.dp)
+                                    .scale(badgeScale)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(
+                                        Brush.linearGradient(
+                                            listOf(
+                                                card.accent.copy(alpha = 0.34f),
+                                                LiquidPalette.PrismBlue.copy(alpha = 0.22f),
+                                            ),
+                                        ),
+                                    )
+                                    .border(1.2.dp, card.accent.copy(alpha = 0.78f), RoundedCornerShape(16.dp)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = card.icon,
+                                    contentDescription = card.title,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(28.dp),
+                                )
+                            }
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = card.title,
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                    ),
+                                    color = Color.White,
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = card.subtitle,
+                                    style = MaterialTheme.typography.bodySmall.copy(lineHeight = 17.sp),
+                                    color = Color(0xFFCAD6F2),
+                                )
+                            }
                         }
-                    }
-                }
-                Spacer(modifier = Modifier.width(14.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "I agree to the Privacy Policy & Terms of Service.",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                        color = scheme.textPrimary,
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "Privacy Policy",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = scheme.textPrimary,
-                            modifier = Modifier.clickable { uriHandler.openUri(com.aura.aura_ui.presentation.screens.legal.LegalCopy.PRIVACY_URL) },
-                        )
-                        Text("  ·  ", style = MaterialTheme.typography.labelSmall, color = scheme.textSecondary)
-                        Text(
-                            text = "Terms of Service",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = scheme.textPrimary,
-                            modifier = Modifier.clickable { uriHandler.openUri(com.aura.aura_ui.presentation.screens.legal.LegalCopy.TERMS_URL) },
-                        )
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
-        AiDisclaimer()
+        Spacer(Modifier.height(16.dp))
+
+        LiquidGlassButton(
+            onClick = onNext,
+            accentGlow = themeGlow,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp),
+        ) {
+            Text("Next", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
+        }
     }
 }
 
-// ── Step 2: User Profile & Google OAuth (Personalization) ────────────────────
+// ── Page 3: Set Wake Word ────────────────────────────────────────────────────
+
 @Composable
-private fun UserProfileAndOAuthStep(
+private fun WakeWordOnboardingPage(
+    wakeWordDraft: String,
+    savedFeedback: Boolean,
+    themeGlow: Color,
+    onDraftChange: (String) -> Unit,
+    onResetDefault: () -> Unit,
+    onSave: () -> Unit,
+    onNext: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = 8.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column {
+            Text(
+                text = "Set Wake Word",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.5).sp,
+                ),
+                color = Color.White,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Speak this custom phrase anytime to wake THAKUR OS hands-free.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFFB5C4E4),
+            )
+            Spacer(Modifier.height(20.dp))
+
+            LiquidGlassSurface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                cornerRadiusDp = 24.dp,
+                strongBlur = true,
+                tintAlpha = 0.56f,
+                prismIntensity = 1.25f,
+                accentGlow = LiquidPalette.PrismBlue,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(LiquidPalette.PrismBlue.copy(alpha = 0.22f))
+                                .border(1.dp, LiquidPalette.PrismBlue.copy(alpha = 0.7f), CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.RecordVoiceOver,
+                                contentDescription = null,
+                                tint = LiquidPalette.PrismBlue,
+                                modifier = Modifier.size(22.dp),
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Voice Summon Phrase",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = Color.White,
+                            )
+                            Text(
+                                text = "Works immediately without restart",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF9EB4DC),
+                            )
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = wakeWordDraft,
+                        onValueChange = onDraftChange,
+                        singleLine = true,
+                        label = { Text("Wake Word") },
+                        placeholder = { Text(ThakurSecurityStore.DEFAULT_WAKE_WORD) },
+                        shape = RoundedCornerShape(14.dp),
+                        colors = onboardingTextFieldColors(LiquidPalette.PrismBlue),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        LiquidGlassButton(
+                            onClick = onResetDefault,
+                            accentGlow = themeGlow,
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 9.dp),
+                        ) {
+                            Icon(Icons.Filled.Refresh, null, modifier = Modifier.size(16.dp))
+                            Text("Reset", fontSize = 13.sp)
+                        }
+
+                        LiquidGlassButton(
+                            onClick = onSave,
+                            enabled = wakeWordDraft.isNotBlank(),
+                            accentGlow = LiquidPalette.SilkCyan,
+                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+                        ) {
+                            Icon(Icons.Filled.Check, null, modifier = Modifier.size(16.dp))
+                            Text("Save", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    AnimatedVisibility(visible = savedFeedback) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Icon(
+                                Icons.Filled.CheckCircle,
+                                contentDescription = null,
+                                tint = LiquidPalette.SilkCyan,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Text(
+                                text = "Wake word active: \"${wakeWordDraft.trim().ifBlank { ThakurSecurityStore.DEFAULT_WAKE_WORD }}\"",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = LiquidPalette.SilkCyan,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        LiquidGlassButton(
+            onClick = onNext,
+            accentGlow = LiquidPalette.PrismBlue,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp),
+        ) {
+            Text("Next", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
+        }
+    }
+}
+
+// ── Page 4: Set Secret Code ──────────────────────────────────────────────────
+
+@Composable
+private fun SecretCodeOnboardingPage(
+    secretEnabled: Boolean,
+    secretDraft: String,
+    secretVisible: Boolean,
+    savedFeedback: Boolean,
+    themeGlow: Color,
+    onToggleEnabled: (Boolean) -> Unit,
+    onSecretChange: (String) -> Unit,
+    onToggleVisibility: () -> Unit,
+    onSave: () -> Unit,
+    onNext: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = 8.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column {
+            Text(
+                text = "Set Secret Code",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.5).sp,
+                ),
+                color = Color.White,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Require a private secret word or PIN before THAKUR OS activates.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFFB5C4E4),
+            )
+            Spacer(Modifier.height(20.dp))
+
+            LiquidGlassSurface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                cornerRadiusDp = 24.dp,
+                strongBlur = true,
+                tintAlpha = 0.56f,
+                prismIntensity = 1.25f,
+                accentGlow = themeGlow,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(themeGlow.copy(alpha = 0.22f))
+                                    .border(1.dp, themeGlow.copy(alpha = 0.72f), CircleShape),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Lock,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(21.dp),
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = "Secret Code Lock",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = Color.White,
+                                )
+                                Text(
+                                    text = if (secretEnabled) "Active on unlock" else "Currently OFF (optional)",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (secretEnabled) LiquidPalette.SilkCyan else Color(0xFF9EB4DC),
+                                )
+                            }
+                        }
+
+                        LiquidGlassToggle(
+                            checked = secretEnabled,
+                            onCheckedChange = onToggleEnabled,
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = secretDraft,
+                        onValueChange = onSecretChange,
+                        singleLine = true,
+                        label = { Text("Secret word or PIN") },
+                        placeholder = { Text("e.g. open sesame or 4829") },
+                        visualTransformation = if (secretVisible) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
+                        trailingIcon = {
+                            LiquidGlassSurface(
+                                modifier = Modifier
+                                    .padding(end = 4.dp)
+                                    .size(34.dp),
+                                shape = CircleShape,
+                                cornerRadiusDp = 17.dp,
+                                strongBlur = false,
+                                tintAlpha = 0.45f,
+                                onClick = onToggleVisibility,
+                            ) {
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = if (secretVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                        contentDescription = if (secretVisible) "Hide secret" else "Show secret",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                }
+                            }
+                        },
+                        shape = RoundedCornerShape(14.dp),
+                        colors = onboardingTextFieldColors(themeGlow),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "AES-256 Encrypted Storage",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF8CA6D4),
+                        )
+
+                        LiquidGlassButton(
+                            onClick = onSave,
+                            enabled = secretDraft.isNotBlank() || !secretEnabled,
+                            accentGlow = LiquidPalette.SilkCyan,
+                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+                        ) {
+                            Icon(Icons.Filled.Check, null, modifier = Modifier.size(16.dp))
+                            Text("Save", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    AnimatedVisibility(visible = savedFeedback) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Icon(
+                                Icons.Filled.CheckCircle,
+                                contentDescription = null,
+                                tint = LiquidPalette.SilkCyan,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Text(
+                                text = if (secretEnabled) "Secret code encrypted & enabled" else "Preferences saved",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = LiquidPalette.SilkCyan,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        LiquidGlassButton(
+            onClick = onNext,
+            accentGlow = themeGlow,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp),
+        ) {
+            Text("Next", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
+        }
+    }
+}
+
+// ── Page 5: Ready ────────────────────────────────────────────────────────────
+
+@Composable
+private fun ReadyOnboardingPage(
+    wakeWord: String,
+    secretEnabled: Boolean,
+    isSignedIn: Boolean,
+    keyVerified: Boolean,
+    refreshPermissions: Int,
+    themeGlow: Color,
+    onOpenDeviceSetup: () -> Unit,
+    onStart: () -> Unit,
+) {
+    val context = LocalContext.current
+    val grantedCount = remember(refreshPermissions) {
+        PermissionRegistry.all.count { it.isGranted(context) }
+    }
+    val totalPerms = PermissionRegistry.all.size
+
+    val infinite = rememberInfiniteTransition(label = "readyOrb")
+    val pulse by infinite.animateFloat(
+        initialValue = 0.86f,
+        targetValue = 1.06f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "readyPulse",
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(Modifier.height(8.dp))
+
+            Box(contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier
+                        .size(136.dp)
+                        .scale(pulse)
+                        .blur(26.dp, BlurredEdgeTreatment.Unbounded)
+                        .background(
+                            Brush.radialGradient(
+                                listOf(
+                                    LiquidPalette.PrismBlue.copy(alpha = 0.55f),
+                                    themeGlow.copy(alpha = 0.42f),
+                                    Color.Transparent,
+                                ),
+                            ),
+                            CircleShape,
+                        ),
+                )
+                LiquidGlassSurface(
+                    modifier = Modifier.size(116.dp),
+                    shape = CircleShape,
+                    cornerRadiusDp = 58.dp,
+                    strongBlur = true,
+                    tintAlpha = 0.52f,
+                    prismIntensity = 1.4f,
+                    accentGlow = LiquidPalette.PrismBlue,
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.thakur_crown_t_mark),
+                        contentDescription = "THAKUR OS Emblem",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp)
+                            .clip(CircleShape),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                text = "You're Ready",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 0.5.sp,
+                ),
+                color = Color.White,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "THAKUR OS is tuned and ready for your command.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFFB5C4E4),
+                textAlign = TextAlign.Center,
+            )
+
+            Spacer(Modifier.height(18.dp))
+
+            // Configured Summary Glass Card
+            LiquidGlassSurface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(22.dp),
+                cornerRadiusDp = 22.dp,
+                strongBlur = true,
+                tintAlpha = 0.54f,
+                prismIntensity = 1.2f,
+                accentGlow = themeGlow,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    SummaryRow(
+                        label = "Wake Word",
+                        value = "\"$wakeWord\"",
+                        accent = LiquidPalette.PrismBlue,
+                    )
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.12f))
+                    SummaryRow(
+                        label = "Secret Code Lock",
+                        value = if (secretEnabled) "Enabled (Encrypted)" else "Off",
+                        accent = if (secretEnabled) LiquidPalette.SilkCyan else Color(0xFF9EB4DC),
+                    )
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.12f))
+                    SummaryRow(
+                        label = "Account & AI Brain",
+                        value = buildString {
+                            append(if (isSignedIn) "Signed in" else "Guest")
+                            append(" · ")
+                            append(if (keyVerified) "Gemini ready" else "Key optional")
+                        },
+                        accent = if (isSignedIn && keyVerified) LiquidPalette.SilkCyan else Color(0xFFCAD6F2),
+                    )
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.12f))
+                    SummaryRow(
+                        label = "Device Permissions",
+                        value = "$grantedCount / $totalPerms granted",
+                        accent = if (grantedCount == totalPerms) LiquidPalette.SilkCyan else Color(0xFFF6C667),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Optional Quick Config Sheet Trigger (preserves Sign-in, Permissions, Gemini Key, App Guard)
+            LiquidGlassButton(
+                onClick = onOpenDeviceSetup,
+                accentGlow = themeGlow,
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            ) {
+                Icon(Icons.Filled.Tune, null, modifier = Modifier.size(18.dp))
+                Text(
+                    text = "Device & AI Setup (Account · Permissions · Key)",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        LiquidGlassButton(
+            onClick = onStart,
+            accentGlow = LiquidPalette.PrismBlue,
+            shape = RoundedCornerShape(28.dp),
+            cornerRadiusDp = 28.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(58.dp),
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp),
+        ) {
+            Icon(Icons.Filled.Bolt, contentDescription = null, modifier = Modifier.size(20.dp))
+            Text(
+                text = "Start THAKUR OS",
+                fontSize = 17.sp,
+                fontWeight = FontWeight.ExtraBold,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SummaryRow(
+    label: String,
+    value: String,
+    accent: Color,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF9EB4DC),
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+            color = accent,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+// ── Bottom Animated Dots Indicator ───────────────────────────────────────────
+
+@Composable
+private fun OnboardingDotsIndicator(
+    pageCount: Int,
+    currentPage: Int,
+    accentColor: Color,
+    onSelectPage: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        repeat(pageCount) { index ->
+            val selected = index == currentPage
+            val width by animateDpAsState(
+                targetValue = if (selected) 28.dp else 8.dp,
+                animationSpec = tween(300, easing = FastOutSlowInEasing),
+                label = "dotWidth_$index",
+            )
+            val color by animateColorAsState(
+                targetValue = if (selected) LiquidPalette.PrismBlue else accentColor.copy(alpha = 0.42f),
+                animationSpec = tween(300),
+                label = "dotColor_$index",
+            )
+            Box(
+                modifier = Modifier
+                    .height(8.dp)
+                    .width(width)
+                    .clip(CircleShape)
+                    .background(
+                        if (selected) {
+                            Brush.horizontalGradient(listOf(LiquidPalette.PrismBlue, accentColor))
+                        } else {
+                            Brush.horizontalGradient(listOf(color, color))
+                        },
+                    )
+                    .border(
+                        width = if (selected) 1.dp else 0.dp,
+                        color = if (selected) Color.White.copy(alpha = 0.65f) else Color.Transparent,
+                        shape = CircleShape,
+                    )
+                    .clickable { onSelectPage(index) },
+            )
+        }
+    }
+}
+
+// ── Optional Full Device & AI Setup Modal (Preserves Account / Permissions / Key / Guard) ──
+
+@Composable
+private fun DeviceSetupLiquidModal(
+    name: String,
+    onNameChanged: (String) -> Unit,
+    signedInEmail: String?,
+    signedIn: Boolean,
+    signingIn: Boolean,
+    signInError: String?,
+    onSignIn: () -> Unit,
+    refreshTrigger: Int,
+    onRequestRuntime: (List<String>) -> Unit,
+    onOpenSystem: (com.aura.aura_ui.presentation.permissions.AuraPermission) -> Unit,
+    onVerifiedChanged: (Boolean) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var activeTab by remember { mutableIntStateOf(0) }
+    val tabs = listOf("Account", "Permissions", "Gemini Key", "App Guard")
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.72f))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onDismiss,
+            )
+            .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.displayCutout))
+            .padding(14.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        LiquidGlassSurface(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {},
+                ),
+            shape = RoundedCornerShape(28.dp),
+            cornerRadiusDp = 28.dp,
+            strongBlur = true,
+            tintAlpha = 0.76f,
+            prismIntensity = 1.3f,
+            accentGlow = LiquidPalette.PrismBlue,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = "Device & AI Setup",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White,
+                    )
+                    LiquidGlassSurface(
+                        modifier = Modifier.size(36.dp),
+                        shape = CircleShape,
+                        cornerRadiusDp = 18.dp,
+                        strongBlur = false,
+                        tintAlpha = 0.5f,
+                        onClick = onDismiss,
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Filled.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(18.dp))
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    tabs.forEachIndexed { idx, label ->
+                        val selected = idx == activeTab
+                        LiquidGlassSurface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(36.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            cornerRadiusDp = 14.dp,
+                            strongBlur = false,
+                            tintAlpha = if (selected) 0.68f else 0.34f,
+                            prismIntensity = if (selected) 1.35f else 0.55f,
+                            accentGlow = if (selected) LiquidPalette.PrismBlue else null,
+                            onClick = { activeTab = idx },
+                        ) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = label,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (selected) Color.White else Color(0xFFB5C4E4),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(14.dp))
+
+                Box(modifier = Modifier.weight(1f)) {
+                    when (activeTab) {
+                        0 -> AccountSetupSection(
+                            name = name,
+                            onNameChanged = onNameChanged,
+                            signedInEmail = signedInEmail,
+                            signedIn = signedIn,
+                            signingIn = signingIn,
+                            error = signInError,
+                            onSignIn = onSignIn,
+                        )
+                        1 -> PermissionsSetupSection(
+                            refreshTrigger = refreshTrigger,
+                            onRequestRuntime = onRequestRuntime,
+                            onOpenSystem = onOpenSystem,
+                        )
+                        2 -> GeminiKeySetupSection(onVerifiedChanged = onVerifiedChanged)
+                        else -> RestrictedAppsSetupSection()
+                    }
+                }
+
+                Spacer(Modifier.height(10.dp))
+
+                LiquidGlassButton(
+                    onClick = onDismiss,
+                    accentGlow = LiquidPalette.SilkCyan,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Done", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AccountSetupSection(
     name: String,
     onNameChanged: (String) -> Unit,
     signedInEmail: String?,
@@ -859,637 +1556,199 @@ private fun UserProfileAndOAuthStep(
     error: String?,
     onSignIn: () -> Unit,
 ) {
-    val scheme = rememberMonoScheme()
-
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .navigationBarsPadding(),
-        verticalArrangement = Arrangement.Center,
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            text = "Personalize your AURA",
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = (-0.6).sp,
-            ),
-            color = scheme.textPrimary,
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Sign in with Google to use AURA, and tell it what to call you.",
-            style = MaterialTheme.typography.bodySmall,
-            color = scheme.textSecondary,
-        )
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Profile Input Card
-        Surface(
-            shape = RoundedCornerShape(18.dp),
-            color = scheme.card,
-            border = BorderStroke(1.dp, scheme.outline.copy(alpha = 0.4f)),
+        LiquidGlassSurface(
             modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            cornerRadiusDp = 18.dp,
+            strongBlur = false,
+            tintAlpha = 0.48f,
         ) {
-            Column(modifier = Modifier.padding(14.dp)) {
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(CircleShape)
-                            .background(scheme.chip),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(Icons.Filled.Person, contentDescription = null, tint = scheme.chipContent, modifier = Modifier.size(18.dp))
-                    }
-                    Column {
-                        Text(
-                            text = "Assistant Identity",
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                            color = scheme.textPrimary,
-                        )
-                        Text(
-                            text = "What should AURA call you?",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = scheme.textSecondary,
-                        )
-                    }
+                    Icon(Icons.Filled.Person, null, tint = LiquidPalette.PrismBlue, modifier = Modifier.size(20.dp))
+                    Text("What should THAKUR OS call you?", color = Color.White, fontWeight = FontWeight.Bold)
                 }
-                Spacer(modifier = Modifier.height(10.dp))
                 OutlinedTextField(
                     value = name,
                     onValueChange = onNameChanged,
-                    placeholder = { Text("Your name (e.g. Alex)") },
+                    placeholder = { Text("Your name") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
+                    colors = onboardingTextFieldColors(LiquidPalette.PrismBlue),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Google OAuth Card
-        Surface(
-            shape = RoundedCornerShape(18.dp),
-            color = scheme.card,
-            border = BorderStroke(1.dp, scheme.outline.copy(alpha = 0.4f)),
+        LiquidGlassSurface(
             modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            cornerRadiusDp = 18.dp,
+            strongBlur = false,
+            tintAlpha = 0.48f,
         ) {
-            Column(modifier = Modifier.padding(14.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = Color.White,
-                        border = BorderStroke(1.dp, Color(0xFFE1E4EA)),
-                        modifier = Modifier.size(34.dp),
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_google_g),
-                                contentDescription = "Google",
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-                    }
-                    Column {
-                        Text(
-                            text = "Google account",
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                            color = scheme.textPrimary,
-                        )
-                        Text(
-                            text = if (signedIn) "Connected to AURA" else "Required to continue",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = scheme.textSecondary,
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Google Account", color = Color.White, fontWeight = FontWeight.Bold)
                 Text(
-                    // Says what it is FOR. The card this replaced promised "Gmail, Calendar &
-                    // Contacts access" behind a button whose onClick was an empty comment — a
-                    // capability claim with nothing behind it. AURA reads mail and contacts on
-                    // the phone itself, through the accessibility service, and asks for none of
-                    // those scopes.
-                    text = "Use your Google account to secure your AURA profile. AURA does not get " +
-                        "access to your Gmail, Drive or Calendar.",
+                    text = "Secures your THAKUR OS profile. Does not request Gmail, Drive, or Calendar scopes.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = scheme.textSecondary,
+                    color = Color(0xFFB5C4E4),
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-
                 if (signedIn) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Icon(
-                            Icons.Filled.MarkEmailRead,
-                            contentDescription = null,
-                            tint = scheme.textPrimary,
-                            modifier = Modifier.size(18.dp),
-                        )
+                        Icon(Icons.Filled.MarkEmailRead, null, tint = LiquidPalette.SilkCyan, modifier = Modifier.size(18.dp))
                         Text(
                             text = signedInEmail ?: "Google account connected",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = scheme.textPrimary,
+                            color = LiquidPalette.SilkCyan,
+                            fontWeight = FontWeight.SemiBold,
                         )
                     }
                 } else {
-                    OutlinedButton(
+                    LiquidGlassButton(
                         onClick = onSignIn,
                         enabled = !signingIn,
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, Color(0xFFDADCE0)),
+                        accentGlow = LiquidPalette.PrismBlue,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_google_g),
                             contentDescription = null,
-                            modifier = Modifier.size(20.dp),
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(18.dp),
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = if (signingIn) "Signing in…" else "Continue with Google",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                        )
+                        Text(if (signingIn) "Signing in..." else "Continue with Google")
                     }
                 }
-
-                // Shown in place rather than as a toast: the fix for two of the four outcomes
-                // (no account on the phone, provider not enabled) is not "tap it again", and a
-                // message that disappears cannot say so.
                 if (error != null) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = error,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Mono.Blood,
-                    )
+                    Text(error, style = MaterialTheme.typography.bodySmall, color = LiquidPalette.DangerRed)
                 }
             }
         }
     }
 }
 
-// ── Step 3: Restricted Settings (Android 13+) ────────────────────────────────
 @Composable
-private fun RestrictedSettingsStep() {
-    val scheme = rememberMonoScheme()
+private fun PermissionsSetupSection(
+    refreshTrigger: Int,
+    onRequestRuntime: (List<String>) -> Unit,
+    onOpenSystem: (com.aura.aura_ui.presentation.permissions.AuraPermission) -> Unit,
+) {
     val context = LocalContext.current
-
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .navigationBarsPadding(),
-        verticalArrangement = Arrangement.Center,
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Text(
-            text = "One Android security step",
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = (-0.6).sp,
-            ),
-            color = scheme.textPrimary,
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = if (Build.VERSION.SDK_INT >= 33) {
-                "Because AURA isn't installed from the Play Store, Android hides the Accessibility " +
-                    "toggle behind an extra confirmation. You only need to do this once."
-            } else {
-                "Your Android version doesn't have this extra step — you can continue straight to permissions."
-            },
-            style = MaterialTheme.typography.bodySmall,
-            color = scheme.textSecondary,
-        )
-        Spacer(modifier = Modifier.height(14.dp))
-
         if (Build.VERSION.SDK_INT >= 33) {
-            Surface(
-                shape = RoundedCornerShape(18.dp),
-                color = scheme.card,
-                border = BorderStroke(1.dp, scheme.outline.copy(alpha = 0.4f)),
+            LiquidGlassSurface(
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                cornerRadiusDp = 16.dp,
+                strongBlur = false,
+                tintAlpha = 0.45f,
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    listOf(
-                        "Tap \"Open app info\" below",
-                        "Scroll down or tap the ⋮ three-dot menu, top-right",
-                        "Tap \"Allow restricted settings\"",
-                        "Confirm with your fingerprint or PIN",
-                    ).forEachIndexed { i, instruction ->
-                        Row(
-                            modifier = Modifier.padding(vertical = 5.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = scheme.chip,
-                                modifier = Modifier.size(22.dp),
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(
-                                        text = "${i + 1}",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = scheme.chipContent,
-                                    )
-                                }
-                            }
-                            Spacer(Modifier.width(10.dp))
-                            Text(
-                                text = instruction,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = scheme.textPrimary,
+                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Android 13+ Restricted Settings",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                    )
+                    Text(
+                        text = "If Accessibility toggle is greyed out, open App Info -> ⋮ -> Allow restricted settings.",
+                        color = Color(0xFFB5C4E4),
+                        fontSize = 12.sp,
+                    )
+                    LiquidGlassButton(
+                        onClick = {
+                            val intent = Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.parse("package:${context.packageName}"),
                             )
-                        }
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.OpenInNew, null, modifier = Modifier.size(15.dp))
+                        Text("Open App Info", fontSize = 13.sp)
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = {
-                    val intent = Intent(
-                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                        Uri.parse("package:${context.packageName}"),
-                    )
-                    context.startActivity(intent)
-                },
-                shape = RoundedCornerShape(12.dp),
+        }
+
+        PermissionRegistry.all.forEach { perm ->
+            val granted = remember(refreshTrigger) { perm.isGranted(context) }
+            LiquidGlassSurface(
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                cornerRadiusDp = 16.dp,
+                strongBlur = false,
+                tintAlpha = if (granted) 0.52f else 0.42f,
+                accentGlow = if (granted) LiquidPalette.SilkCyan else null,
+                onClick = {
+                    if (perm.runtimePermissions.isNotEmpty() && !granted) {
+                        onRequestRuntime(perm.runtimePermissions)
+                    } else {
+                        onOpenSystem(perm)
+                    }
+                },
             ) {
-                Icon(Icons.AutoMirrored.Filled.OpenInNew, null, modifier = Modifier.size(16.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Open App Info")
-            }
-        }
-    }
-}
-
-// ── Step 4: Accessibility Service (anim_accessibility.html) ──────────────────
-@Composable
-private fun AccessibilityPermissionStep(
-    refreshTrigger: Int,
-    onOpenSystem: (AuraPermission) -> Unit,
-    onAutoAdvance: () -> Unit,
-) {
-    val scheme = rememberMonoScheme()
-    val context = LocalContext.current
-    val perm = remember { PermissionRegistry.all.first { it.id == "accessibility" } }
-    val granted = remember(refreshTrigger) { perm.isGranted(context) }
-
-    LaunchedEffect(granted) {
-        if (granted) {
-            delay(400)
-            onAutoAdvance()
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = 8.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        // 1. Top Card with Clean Permission Row
-        Surface(
-            shape = RoundedCornerShape(18.dp),
-            color = scheme.card.copy(alpha = 0.96f),
-            border = BorderStroke(1.dp, scheme.outline.copy(alpha = 0.5f)),
-            shadowElevation = 3.dp,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            PermissionItemRow(
-                title = "Accessibility Service",
-                granted = granted,
-                icon = permissionIcon(perm.id),
-                onToggle = { onOpenSystem(perm) },
-            )
-        }
-
-        // 2. Middle: Animation Preview (fills available space with ZERO overlap)
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            OnboardingAnimationCard(
-                assetFileName = "anim_accessibility.html",
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
-
-        // 3. Bottom: 2 Clean Reason Cards side-by-side (outside the animation)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            FloatingReasonCard(
-                icon = Icons.Filled.Visibility,
-                title = "Reads Screen Context",
-                subtitle = "Identifies UI buttons & active forms",
-                modifier = Modifier.weight(1f),
-            )
-            FloatingReasonCard(
-                icon = Icons.Filled.TouchApp,
-                title = "Automated Clicks",
-                subtitle = "Taps & completes tasks for you",
-                modifier = Modifier.weight(1f),
-            )
-        }
-    }
-}
-
-// ── Step 5: Voice & Overlay (anim_microphone.html) ───────────────────────────
-@Composable
-private fun VoiceAndOverlayPermissionStep(
-    refreshTrigger: Int,
-    onRequestRuntime: (List<String>) -> Unit,
-    onOpenSystem: (AuraPermission) -> Unit,
-    onAutoAdvance: () -> Unit,
-) {
-    val scheme = rememberMonoScheme()
-    val context = LocalContext.current
-    val micPerm = remember { PermissionRegistry.all.first { it.id == "microphone" } }
-    val overlayPerm = remember { PermissionRegistry.all.first { it.id == "overlay" } }
-
-    val micGranted = remember(refreshTrigger) { micPerm.isGranted(context) }
-    val overlayGranted = remember(refreshTrigger) { overlayPerm.isGranted(context) }
-
-    // Strictly auto-advance only when BOTH are granted
-    LaunchedEffect(micGranted, overlayGranted) {
-        if (micGranted && overlayGranted) {
-            delay(400)
-            onAutoAdvance()
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = 8.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        // 1. Top Card that Morphs: First Mic -> Then Overlay once granted
-        Surface(
-            shape = RoundedCornerShape(18.dp),
-            color = scheme.card.copy(alpha = 0.96f),
-            border = BorderStroke(1.dp, scheme.outline.copy(alpha = 0.5f)),
-            shadowElevation = 3.dp,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            AnimatedContent(
-                targetState = if (!micGranted) 0 else 1,
-                transitionSpec = {
-                    (slideInHorizontally { it } + fadeIn()) togetherWith (slideOutHorizontally { -it } + fadeOut())
-                },
-                label = "permMorphStep5",
-            ) { stage ->
-                if (stage == 0) {
-                    PermissionItemRow(
-                        title = "1/2: Microphone Access",
-                        granted = micGranted,
-                        icon = permissionIcon(micPerm.id),
-                        onToggle = { if (!micGranted) onRequestRuntime(micPerm.runtimePermissions) },
-                    )
-                } else {
-                    PermissionItemRow(
-                        title = "2/2: Display Over Other Apps",
-                        granted = overlayGranted,
-                        icon = permissionIcon(overlayPerm.id),
-                        onToggle = { onOpenSystem(overlayPerm) },
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(
+                            imageVector = permissionIcon(perm.id),
+                            contentDescription = null,
+                            tint = if (granted) LiquidPalette.SilkCyan else Color.White,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Text(
+                            text = perm.title,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = Color.White,
+                        )
+                    }
+                    LiquidGlassToggle(
+                        checked = granted,
+                        onCheckedChange = {
+                            if (perm.runtimePermissions.isNotEmpty() && !granted) {
+                                onRequestRuntime(perm.runtimePermissions)
+                            } else {
+                                onOpenSystem(perm)
+                            }
+                        },
                     )
                 }
             }
         }
-
-        // 2. Middle: Animation Preview (fills available space with ZERO overlap)
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            OnboardingAnimationCard(
-                assetFileName = "anim_microphone.html",
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
-
-        // 3. Bottom: 2 Clean Reason Cards side-by-side (outside the animation)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            FloatingReasonCard(
-                icon = Icons.Filled.Mic,
-                title = "Real-Time Voice",
-                subtitle = "Natural speech-to-intent reasoning",
-                modifier = Modifier.weight(1f),
-            )
-            FloatingReasonCard(
-                icon = Icons.Filled.Layers,
-                title = "Always-On Overlay",
-                subtitle = "Floats seamlessly over any active app",
-                modifier = Modifier.weight(1f),
-            )
-        }
     }
 }
 
-// ── Step 6: AURA Virtual Keyboard (anim_keyboard.html) ───────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun KeyboardPermissionStep(
-    refreshTrigger: Int,
-    onOpenSystem: (AuraPermission) -> Unit,
-    onAutoAdvance: () -> Unit,
-) {
-    val scheme = rememberMonoScheme()
-    val context = LocalContext.current
-    val perm = remember { PermissionRegistry.all.first { it.id == "aura_keyboard" } }
-    val granted = remember(refreshTrigger) { perm.isGranted(context) }
-
-    LaunchedEffect(granted) {
-        if (granted) {
-            delay(400)
-            onAutoAdvance()
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = 8.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        // 1. Top Card with Clean Permission Row
-        Surface(
-            shape = RoundedCornerShape(18.dp),
-            color = scheme.card.copy(alpha = 0.96f),
-            border = BorderStroke(1.dp, scheme.outline.copy(alpha = 0.5f)),
-            shadowElevation = 3.dp,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            PermissionItemRow(
-                title = "AURA Virtual Keyboard",
-                granted = granted,
-                icon = permissionIcon(perm.id),
-                onToggle = { onOpenSystem(perm) },
-            )
-        }
-
-        // 2. Middle: Animation Preview (fills available space with ZERO overlap)
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            OnboardingAnimationCard(
-                assetFileName = "anim_keyboard.html",
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
-
-        // 3. Bottom: 2 Clean Reason Cards side-by-side (outside the animation)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            FloatingReasonCard(
-                icon = Icons.Outlined.Keyboard,
-                title = "Automated Typing",
-                subtitle = "Fills inputs, forms & searches in apps",
-                modifier = Modifier.weight(1f),
-            )
-            FloatingReasonCard(
-                icon = Icons.Filled.Bolt,
-                title = "Instant Key Dispatch",
-                subtitle = "Submits Enter & action keys directly",
-                modifier = Modifier.weight(1f),
-            )
-        }
-    }
-}
-
-// ── Step 7: Notifications & Live Alerts (anim_notifications.html) ────────────
-@Composable
-private fun NotificationsPermissionStep(
-    refreshTrigger: Int,
-    onRequestRuntime: (List<String>) -> Unit,
-    onOpenSystem: (AuraPermission) -> Unit,
-    onAutoAdvance: () -> Unit,
-) {
-    val scheme = rememberMonoScheme()
-    val context = LocalContext.current
-    val notifPerm = remember { PermissionRegistry.all.first { it.id == "notifications" } }
-    val notifAccessPerm = remember { PermissionRegistry.all.first { it.id == "notification_access" } }
-
-    val notifGranted = remember(refreshTrigger) { notifPerm.isGranted(context) }
-    val accessGranted = remember(refreshTrigger) { notifAccessPerm.isGranted(context) }
-
-    // Auto-advance only when notifications permissions are granted
-    LaunchedEffect(notifGranted, accessGranted) {
-        if (notifGranted && accessGranted) {
-            delay(400)
-            onAutoAdvance()
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = 8.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        // 1. Top Card that Morphs: First Push -> Then Live Alerts once granted
-        Surface(
-            shape = RoundedCornerShape(18.dp),
-            color = scheme.card.copy(alpha = 0.96f),
-            border = BorderStroke(1.dp, scheme.outline.copy(alpha = 0.5f)),
-            shadowElevation = 3.dp,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            AnimatedContent(
-                targetState = if (!notifGranted) 0 else 1,
-                transitionSpec = {
-                    (slideInHorizontally { it } + fadeIn()) togetherWith (slideOutHorizontally { -it } + fadeOut())
-                },
-                label = "permMorphStep7",
-            ) { stage ->
-                if (stage == 0) {
-                    PermissionItemRow(
-                        title = "1/2: Push Notifications",
-                        granted = notifGranted,
-                        icon = permissionIcon(notifPerm.id),
-                        onToggle = { if (!notifGranted) onRequestRuntime(notifPerm.runtimePermissions) },
-                    )
-                } else {
-                    PermissionItemRow(
-                        title = "2/2: Live Alerts & Listener",
-                        granted = accessGranted,
-                        icon = permissionIcon(notifAccessPerm.id),
-                        onToggle = { onOpenSystem(notifAccessPerm) },
-                    )
-                }
-            }
-        }
-
-        // 2. Middle: Animation Preview (fills available space with ZERO overlap)
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            OnboardingAnimationCard(
-                assetFileName = "anim_notifications.html",
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
-
-        // 3. Bottom: 2 Clean Reason Cards side-by-side (outside the animation)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            FloatingReasonCard(
-                icon = Icons.Outlined.NotificationsActive,
-                title = "Live Alerts Dynamic Pill",
-                subtitle = "Dynamic Island status on Android",
-                modifier = Modifier.weight(1f),
-            )
-            FloatingReasonCard(
-                icon = Icons.Filled.CheckCircle,
-                title = "Direct Quick Actions",
-                subtitle = "Replies and dismisses alerts on command",
-                modifier = Modifier.weight(1f),
-            )
-        }
-    }
-}
-
-// ── Step 8: Gemini Key ───────────────────────────────────────────────────────
-@Composable
-private fun GeminiKeyStep(onVerifiedChanged: (Boolean) -> Unit) {
-    val scheme = rememberMonoScheme()
+private fun GeminiKeySetupSection(onVerifiedChanged: (Boolean) -> Unit) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val scope = rememberCoroutineScope()
@@ -1500,8 +1759,8 @@ private fun GeminiKeyStep(onVerifiedChanged: (Boolean) -> Unit) {
     var revealed by remember { mutableStateOf(false) }
     var brainModel by remember { mutableStateOf(LlmEndpointCatalog.GEMINI_DEFAULT_MODEL_ID) }
     var liveModel by remember { mutableStateOf(CompanionConfig.LIVE_MODEL) }
-    var brainModels by remember { mutableStateOf<List<String>>(listOf(LlmEndpointCatalog.GEMINI_DEFAULT_MODEL_ID)) }
-    var liveModels by remember { mutableStateOf<List<String>>(listOf(CompanionConfig.LIVE_MODEL)) }
+    var brainModels by remember { mutableStateOf(listOf(LlmEndpointCatalog.GEMINI_DEFAULT_MODEL_ID)) }
+    var liveModels by remember { mutableStateOf(listOf(CompanionConfig.LIVE_MODEL)) }
     var verifying by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var verified by remember { mutableStateOf(keyStore.isConfigured(LlmEndpointCatalog.GEMINI_ID)) }
@@ -1509,189 +1768,135 @@ private fun GeminiKeyStep(onVerifiedChanged: (Boolean) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .navigationBarsPadding(),
-        verticalArrangement = Arrangement.Center,
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            text = "Bring your own Gemini key",
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = (-0.6).sp,
-            ),
-            color = scheme.textPrimary,
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Required — drives both Agent Brain reasoning and natural Gemini Live voice mode.",
-            style = MaterialTheme.typography.bodySmall,
-            color = scheme.textSecondary,
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        // Change together: GEMINI_PRESET_NOTE in ProviderSettingsScreen says the same thing.
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = scheme.chip,
+        LiquidGlassButton(
+            onClick = { uriHandler.openUri(gemini.keyUrl ?: "https://aistudio.google.com/apikey") },
+            accentGlow = LiquidPalette.PrismBlue,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Row(modifier = Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Icon(Icons.Filled.Info, contentDescription = null, tint = scheme.chipContent, modifier = Modifier.size(18.dp))
-                Text(
-                    text = "Gemini is just the starting preset. How well AURA completes tasks depends on " +
-                        "the model you use, and you can switch to any provider later in Settings → Brain. " +
-                        "We start with Gemini because one free key also gives you Gemini Live, a natural " +
-                        "voice assistant at no cost.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = scheme.textPrimary,
-                )
+            Icon(Icons.Filled.Key, null, modifier = Modifier.size(16.dp))
+            Text("Get free key at aistudio.google.com", fontSize = 13.sp)
+            Icon(Icons.AutoMirrored.Filled.OpenInNew, null, modifier = Modifier.size(14.dp))
+        }
+
+        OutlinedTextField(
+            value = keyText,
+            onValueChange = { keyText = it; verified = false; onVerifiedChanged(false) },
+            label = { Text("Gemini API key") },
+            placeholder = { Text(gemini.keyHint ?: "AIza...") },
+            singleLine = true,
+            isError = error != null,
+            shape = RoundedCornerShape(12.dp),
+            colors = onboardingTextFieldColors(LiquidPalette.PrismBlue),
+            visualTransformation = if (revealed) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                LiquidGlassSurface(
+                    modifier = Modifier
+                        .padding(end = 4.dp)
+                        .size(32.dp),
+                    shape = CircleShape,
+                    cornerRadiusDp = 16.dp,
+                    strongBlur = false,
+                    tintAlpha = 0.45f,
+                    onClick = { revealed = !revealed },
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(
+                            if (revealed) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        OnboardingModelDropdown(
+            label = "Agent Brain Model",
+            selected = brainModel,
+            options = brainModels,
+            stripPrefix = false,
+            onSelect = { brainModel = it },
+        )
+
+        OnboardingModelDropdown(
+            label = "Gemini Live Voice Model",
+            selected = liveModel,
+            options = liveModels,
+            stripPrefix = true,
+            onSelect = { liveModel = it },
+        )
+
+        LiquidGlassButton(
+            enabled = !verifying && keyText.isNotBlank(),
+            accentGlow = LiquidPalette.SilkCyan,
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+                scope.launch {
+                    verifying = true
+                    error = null
+                    val trimmed = keyText.trim()
+                    val brainResult = ModelCatalog.fetch(gemini, trimmed)
+                    val liveResult = LiveModelResolver.listLiveModels(trimmed)
+                    val brainOk = brainResult.isSuccess && brainResult.getOrNull()?.isNotEmpty() == true
+                    if (!brainOk) {
+                        error = brainResult.exceptionOrNull()?.message ?: "Key rejected — check it and try again."
+                        verified = false
+                        onVerifiedChanged(false)
+                    } else {
+                        brainModels = brainResult.getOrNull().orEmpty().map { it.id }
+                            .let { if (it.contains(brainModel)) it else listOf(brainModel) + it }
+                        liveModels = liveResult.ifEmpty { listOf(liveModel) }
+                            .let { if (it.contains(liveModel)) it else listOf(liveModel) + it }
+
+                        keyStore.setKey(LlmEndpointCatalog.GEMINI_ID, trimmed)
+                        keyStore.setSelectedEndpointId(LlmEndpointCatalog.GEMINI_ID)
+                        keyStore.setSelectedModel(LlmEndpointCatalog.GEMINI_ID, brainModel)
+                        val brainInfo = brainResult.getOrNull()?.firstOrNull { it.id == brainModel }
+                        keyStore.setSelectedModelContextWindow(
+                            LlmEndpointCatalog.GEMINI_ID,
+                            brainInfo?.contextWindow,
+                        )
+                        keyStore.setSelectedModelVisionCapable(
+                            LlmEndpointCatalog.GEMINI_ID,
+                            brainInfo?.visionCapable,
+                        )
+                        val companion = CompanionConfig(context)
+                        companion.liveModel = liveModel
+                        companion.enabled = true
+                        companion.useGeminiLive = true
+
+                        verified = true
+                        onVerifiedChanged(true)
+                    }
+                    verifying = false
+                }
+            },
+        ) {
+            if (verifying) {
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
+                Text("Verifying Key...")
+            } else if (verified) {
+                Icon(Icons.Filled.CheckCircle, null, tint = LiquidPalette.SilkCyan, modifier = Modifier.size(18.dp))
+                Text("Key Verified")
+            } else {
+                Text("Verify API Key")
             }
         }
-        Spacer(modifier = Modifier.height(14.dp))
 
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = scheme.card,
-            border = BorderStroke(1.dp, scheme.outline.copy(alpha = 0.35f)),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { uriHandler.openUri(gemini.keyUrl ?: "https://aistudio.google.com/apikey") },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(scheme.chip),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(Icons.Filled.Key, contentDescription = null, tint = scheme.chipContent, modifier = Modifier.size(16.dp))
-                    }
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        text = "Get a free key at aistudio.google.com/apikey",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                        color = scheme.textPrimary,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Icon(
-                        Icons.AutoMirrored.Filled.OpenInNew,
-                        contentDescription = "Open",
-                        tint = scheme.textSecondary,
-                        modifier = Modifier.size(14.dp),
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                OutlinedTextField(
-                    value = keyText,
-                    onValueChange = { keyText = it; verified = false; onVerifiedChanged(false) },
-                    label = { Text("Gemini API key") },
-                    placeholder = { Text(gemini.keyHint ?: "AIza...") },
-                    singleLine = true,
-                    isError = error != null,
-                    shape = RoundedCornerShape(12.dp),
-                    visualTransformation = if (revealed) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { revealed = !revealed }) {
-                            Icon(if (revealed) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, null)
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-
-                ModelDropdown(
-                    label = "Agent Brain Model",
-                    selected = brainModel,
-                    options = brainModels,
-                    stripPrefix = false,
-                    onSelect = { brainModel = it },
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                ModelDropdown(
-                    label = "Gemini Live Voice Model",
-                    selected = liveModel,
-                    options = liveModels,
-                    stripPrefix = true,
-                    onSelect = { liveModel = it },
-                )
-                Spacer(modifier = Modifier.height(14.dp))
-
-                OutlinedButton(
-                    enabled = !verifying && keyText.isNotBlank(),
-                    onClick = {
-                        scope.launch {
-                            verifying = true
-                            error = null
-                            val trimmed = keyText.trim()
-                            val brainResult = ModelCatalog.fetch(gemini, trimmed)
-                            val liveResult = LiveModelResolver.listLiveModels(trimmed)
-                            val brainOk = brainResult.isSuccess && brainResult.getOrNull()?.isNotEmpty() == true
-                            if (!brainOk) {
-                                error = brainResult.exceptionOrNull()?.message ?: "Key rejected — check it and try again."
-                                verified = false
-                                onVerifiedChanged(false)
-                            } else {
-                                brainModels = brainResult.getOrNull().orEmpty().map { it.id }
-                                    .let { if (it.contains(brainModel)) it else listOf(brainModel) + it }
-                                liveModels = liveResult.ifEmpty { listOf(liveModel) }
-                                    .let { if (it.contains(liveModel)) it else listOf(liveModel) + it }
-
-                                keyStore.setKey(LlmEndpointCatalog.GEMINI_ID, trimmed)
-                                keyStore.setSelectedEndpointId(LlmEndpointCatalog.GEMINI_ID)
-                                keyStore.setSelectedModel(LlmEndpointCatalog.GEMINI_ID, brainModel)
-                                val brainInfo = brainResult.getOrNull()?.firstOrNull { it.id == brainModel }
-                                keyStore.setSelectedModelContextWindow(
-                                    LlmEndpointCatalog.GEMINI_ID,
-                                    brainInfo?.contextWindow,
-                                )
-                                keyStore.setSelectedModelVisionCapable(
-                                    LlmEndpointCatalog.GEMINI_ID,
-                                    brainInfo?.visionCapable,
-                                )
-                                val companion = CompanionConfig(context)
-                                companion.liveModel = liveModel
-                                companion.enabled = true
-                                companion.useGeminiLive = true
-
-                                verified = true
-                                onVerifiedChanged(true)
-                            }
-                            verifying = false
-                        }
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    if (verifying) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Mono.Ink)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Verifying Key...")
-                    } else if (verified) {
-                        Icon(Icons.Filled.CheckCircle, null, tint = scheme.textPrimary, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Key Verified")
-                    } else {
-                        Text("Verify API Key")
-                    }
-                }
-                error?.let {
-                    Spacer(Modifier.height(8.dp))
-                    Text(it, style = MaterialTheme.typography.bodySmall, color = Mono.Blood)
-                }
-            }
+        error?.let {
+            Text(it, style = MaterialTheme.typography.bodySmall, color = LiquidPalette.DangerRed)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ModelDropdown(
+private fun OnboardingModelDropdown(
     label: String,
     selected: String,
     options: List<String>,
@@ -1708,6 +1913,7 @@ private fun ModelDropdown(
             readOnly = true,
             label = { Text(label) },
             shape = RoundedCornerShape(12.dp),
+            colors = onboardingTextFieldColors(LiquidPalette.PrismBlue),
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .fillMaxWidth()
@@ -1729,10 +1935,8 @@ private fun ModelDropdown(
     }
 }
 
-// ── Step 9: Restricted Apps ──────────────────────────────────────────────────
 @Composable
-private fun RestrictedAppsStep() {
-    val scheme = rememberMonoScheme()
+private fun RestrictedAppsSetupSection() {
     val context = LocalContext.current
     val store = remember { AppRestrictedApps.get(context) }
     val entries by store.entries.collectAsState()
@@ -1761,64 +1965,63 @@ private fun RestrictedAppsStep() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .navigationBarsPadding(),
-        verticalArrangement = Arrangement.Center,
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(scheme.chip),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(Icons.Filled.Shield, contentDescription = null, tint = scheme.chipContent, modifier = Modifier.size(20.dp))
-            }
-            Text(
-                text = "Banking & Sensitive Guard",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = (-0.6).sp,
-                ),
-                color = scheme.textPrimary,
-            )
+            Icon(Icons.Filled.Shield, null, tint = LiquidPalette.SilkCyan, modifier = Modifier.size(18.dp))
+            Text("Banking & Sensitive Guard", color = Color.White, fontWeight = FontWeight.Bold)
         }
-        Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = "AURA scans installed apps to automatically decline actions in financial and authenticator apps.",
+            text = "Automatically protects financial and authenticator apps from automation.",
             style = MaterialTheme.typography.bodySmall,
-            color = scheme.textSecondary,
+            color = Color(0xFFB5C4E4),
         )
-        Spacer(modifier = Modifier.height(18.dp))
 
         if (scanning) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = scheme.textSecondary)
-                Spacer(Modifier.width(12.dp))
-                Text("Scanning apps...", style = MaterialTheme.typography.bodyMedium, color = scheme.textSecondary)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = LiquidPalette.PrismBlue)
+                Text("Scanning installed apps...", color = Color(0xFFB5C4E4))
             }
         } else if (scanError != null) {
-            Text("Couldn't scan: $scanError", style = MaterialTheme.typography.bodySmall, color = Mono.Blood)
+            Text("Scan failed: $scanError", color = LiquidPalette.DangerRed, style = MaterialTheme.typography.bodySmall)
+        } else if (entries.isEmpty()) {
+            Text("No sensitive apps detected.", color = Color(0xFFB5C4E4), style = MaterialTheme.typography.bodySmall)
         } else {
-            when {
-                entries.isEmpty() -> Text(
-                    "No sensitive apps found on this device.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = scheme.textSecondary,
-                )
-                else -> MonoCardGroup(scheme) {
-                    val sorted = entries.sortedBy { it.appName }
-                    sorted.forEachIndexed { i, entry ->
-                        if (i > 0) HorizontalDivider(color = scheme.divider, thickness = 1.dp)
-                        RestrictedAppOnboardingRow(
-                            entry = entry,
-                            scheme = scheme,
-                            onTierChange = { tier -> store.updateTier(entry.packageName, tier) },
-                        )
+            entries.sortedBy { it.appName }.forEach { entry: RestrictedAppEntry ->
+                LiquidGlassSurface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    cornerRadiusDp = 16.dp,
+                    strongBlur = false,
+                    tintAlpha = 0.45f,
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(entry.appName, color = Color.White, fontWeight = FontWeight.SemiBold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            LiquidGlassButton(
+                                onClick = { store.updateTier(entry.packageName, RestrictedTier.DECLINE_ONLY) },
+                                accentGlow = if (entry.tier == RestrictedTier.DECLINE_ONLY) LiquidPalette.SilkCyan else null,
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 7.dp),
+                            ) {
+                                Text("Decline only", fontSize = 11.sp)
+                            }
+                            LiquidGlassButton(
+                                onClick = { store.updateTier(entry.packageName, RestrictedTier.DISABLE_ACCESSIBILITY) },
+                                accentGlow = if (entry.tier == RestrictedTier.DISABLE_ACCESSIBILITY) LiquidPalette.SilkViolet else null,
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 7.dp),
+                            ) {
+                                Text("Disable A11y", fontSize = 11.sp)
+                            }
+                        }
                     }
                 }
             }
@@ -1826,31 +2029,15 @@ private fun RestrictedAppsStep() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RestrictedAppOnboardingRow(
-    entry: RestrictedAppEntry,
-    scheme: com.aura.aura_ui.ui.theme.MonoScheme,
-    onTierChange: (RestrictedTier) -> Unit,
-) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
-        Text(
-            text = entry.appName,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = scheme.textPrimary,
-        )
-        Spacer(Modifier.height(10.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = entry.tier == RestrictedTier.DECLINE_ONLY,
-                onClick = { onTierChange(RestrictedTier.DECLINE_ONLY) },
-                label = { Text("Decline only") },
-            )
-            FilterChip(
-                selected = entry.tier == RestrictedTier.DISABLE_ACCESSIBILITY,
-                onClick = { onTierChange(RestrictedTier.DISABLE_ACCESSIBILITY) },
-                label = { Text("Disable Accessibility") },
-            )
-        }
-    }
-}
+private fun onboardingTextFieldColors(accent: Color) = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = Color.White,
+    unfocusedTextColor = Color.White,
+    cursorColor = accent,
+    focusedBorderColor = accent,
+    unfocusedBorderColor = Color.White.copy(alpha = 0.28f),
+    focusedLabelColor = accent,
+    unfocusedLabelColor = Color(0xFFB0C0E0),
+    focusedPlaceholderColor = Color.White.copy(alpha = 0.42f),
+    unfocusedPlaceholderColor = Color.White.copy(alpha = 0.42f),
+)

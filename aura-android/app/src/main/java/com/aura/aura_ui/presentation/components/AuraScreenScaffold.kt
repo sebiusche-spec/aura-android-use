@@ -47,12 +47,11 @@ fun AuraScreenScaffold(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scheme = rememberMonoScheme()
-    val warm = rememberWarmScheme()
     val scroll = rememberScrollState()
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(warm.canvasBrush())
+            .background(androidx.compose.ui.graphics.Color.Transparent)
             .statusBarsPadding(),
     ) {
         // Capsule design (2026-07-10): back lives in the bottom capsule strip

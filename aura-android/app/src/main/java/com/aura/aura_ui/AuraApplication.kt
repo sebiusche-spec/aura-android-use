@@ -33,6 +33,7 @@ class AuraApplication : Application() {
         // and a service-started process (boot, quick-settings tile) never runs a Compose screen.
         RecordableVoiceStore.hydrate(this)
         com.aura.aura_ui.data.preferences.ReadScreenImageStore.hydrate(this)
+        com.aura.aura_ui.data.preferences.ThakurSecurityStore.hydrate(this)
         // After a swipe from recents (ColorOS kills the whole process), Android restarts our sticky
         // services one at a time ~20 s apart, with backoff — the wake word was measured coming back
         // after 81–480 s. Whichever component brings the process back up restarts it right away.

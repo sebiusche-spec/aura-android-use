@@ -399,7 +399,11 @@ class AuraAgent(private val context: Context) {
             // The doctrine opens with who AURA is. The Live plane's AuraCapabilities paragraph is
             // not sent here: this agent's capabilities ARE its tool list, generated per run. The
             // doctrine names no conditionally-registered tool, so it needs no per-run gating.
-            val identityPrompt = SYSTEM_PROMPT +
+            val identityRule = "Your identity is: \"My name is THAKUR OS, developed by Shivam Thakur.\" " +
+                "If the user asks \"What is your name?\" or \"Who developed you?\", answer with: " +
+                "\"My name is THAKUR OS, developed by Shivam Thakur.\""
+            val identityPrompt = SYSTEM_PROMPT.replace("AURA", "THAKUR OS") +
+                "\n\n" + identityRule +
                 (if (profileBlock.isBlank()) "" else "\n\n" + profileBlock) +
                 (if (deviceBlock.isBlank()) "" else "\n\n" + deviceBlock)
             val effectiveSystemPrompt = remoteAttachment?.let { identityPrompt + "\n\n" + it.instructions } ?: identityPrompt

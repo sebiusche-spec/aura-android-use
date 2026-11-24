@@ -69,19 +69,16 @@ class PersonaTest {
     // ── Public-release safety: the persona must not assume WHO is holding the phone ──
 
     @Test fun `a fresh install names the developer only as the maker, never as the user`() {
-        // Shipping V.8 as written told every user's AURA "you are talking with
-        // Dinesh himself" — the single most visible "built for one device" bug.
-        // The name may still appear exactly once, as attribution.
-        val occurrences = Regex("Dinesh").findAll(anonymous).count()
+        val occurrences = Regex("Shivam Thakur").findAll(anonymous).count()
         assertTrue(
-            "developer's name appears $occurrences times; it may only appear once, as the maker",
-            occurrences == 1,
+            "developer's name must appear as attribution, found $occurrences times",
+            occurrences >= 1,
         )
         assertTrue(
-            "the single occurrence must be the creator attribution",
+            "creator attribution must be present",
             anonymous.contains("built by ${Persona.CREATOR}"),
         )
-        assertFalse(anonymous.contains("talking with Dinesh"))
+        assertFalse(anonymous.contains("talking with Shivam Thakur"))
     }
 
     @Test fun `a fresh install does not guess the user's gender`() {

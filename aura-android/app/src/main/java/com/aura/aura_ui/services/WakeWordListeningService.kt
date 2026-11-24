@@ -17,6 +17,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.aura.aura_ui.MainActivity
 import com.aura.aura_ui.R
+import com.aura.aura_ui.data.preferences.ThakurSecurityStore
 import com.aura.aura_ui.overlay.AuraOverlayService
 import com.aura.aura_ui.voice.ListeningMode
 import com.aura.aura_ui.voice.ListeningModeController
@@ -80,6 +81,7 @@ class WakeWordListeningService : Service() {
         const val ACTION_START = "com.aura.aura_ui.START_WAKE_WORD"
         const val ACTION_STOP = "com.aura.aura_ui.STOP_WAKE_WORD"
         const val ACTION_TOGGLE = "com.aura.aura_ui.TOGGLE_WAKE_WORD"
+        const val ACTION_RELOAD_WAKE_WORD = "com.aura.aura_ui.RELOAD_WAKE_WORD"
         
         @Volatile
         private var instance: WakeWordListeningService? = null
@@ -118,6 +120,18 @@ class WakeWordListeningService : Service() {
             }
             ForegroundServiceCompat.startSafely(context, intent)
         }
+
+        /**
+         * Reload the active wake word detector immediately after user edits the phrase in Settings.
+         */
+        fun reloadWakeWord(context: Context) {
+            val prefs = context.getSharedPreferences("aura_settings", Context.MODE_PRIVATE)
+            if (!isActive() && !prefs.getBoolean("wake_word_enabled", false)) return
+            val intent = Intent(context, WakeWordListeningService::class.java).apply {
+                action = ACTION_RELOAD_WAKE_WORD
+            }
+            ForegroundServiceCompat.startSafely(context, intent)
+        }
         
         /**
          * Check if wake word listening is currently active.
@@ -134,6 +148,7 @@ class WakeWordListeningService : Service() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        ThakurSecurityStore.hydrate(this)
 
         createNotificationChannel()
         if (!startForegroundSafely()) {
@@ -182,6 +197,7 @@ class WakeWordListeningService : Service() {
         when (intent?.action) {
             ACTION_START -> enableWakeWord()
             ACTION_STOP -> disableWakeWord()
+            ACTION_RELOAD_WAKE_WORD -> reloadDetectorForUpdatedPhrase()
             // The saved setting, not the in-memory flag: a process that was killed and restarted
             // starts with isWakeWordEnabled=false, so "Disable" would otherwise turn it back ON.
             ACTION_TOGGLE -> if (savedWakeWordEnabled()) disableWakeWord() else enableWakeWord()
@@ -347,6 +363,23 @@ class WakeWordListeningService : Service() {
         saveWakeWordEnabled(true)
 
         Log.i(TAG, "✅ Wake word detection enabled (detector listening: ${wakeWordDetector?.isListening?.value})")
+    }
+
+    /** Rebuild and restart keyword spotter immediately when user saves a new wake phrase. */
+    private fun reloadDetectorForUpdatedPhrase() {
+        ThakurSecurityStore.hydrate(this)
+        if (!isWakeWordEnabled && !savedWakeWordEnabled()) {
+            stopSelf()
+            return
+        }
+        Log.i(TAG, "🔄 Reloading wake word detector for \"${ThakurSecurityStore.getWakeWord(this)}\"")
+        stopWakeWordDetection()
+        wakeWordDetector?.release()
+        wakeWordDetector = WakeWordDetector.create(this)
+        setupWakeWordDetector()
+        isWakeWordEnabled = true
+        updateNotification(listeningModeController?.currentMode?.value == ListeningMode.PASSIVE)
+        ensureWakeWordDetectionRunning()
     }
     
     /**
@@ -614,7 +647,7 @@ class WakeWordListeningService : Service() {
                 "Wake word (background)",
                 NotificationManager.IMPORTANCE_MIN,
             ).apply {
-                description = "Required by Android to keep listening for \"Wake up AURA\" in the background"
+                description = "Required by Android to keep listening for \"${ThakurSecurityStore.getWakeWord(this@WakeWordListeningService)}\" in the background"
                 setShowBadge(false)
                 lockscreenVisibility = Notification.VISIBILITY_SECRET
                 setSound(null, null)
@@ -628,7 +661,7 @@ class WakeWordListeningService : Service() {
      * Android requires a notification for a background microphone service, so this cannot be
      * removed while the wake word is on. It is kept as quiet as the platform allows: MIN importance
      * (no status-bar icon, folded at the bottom of the shade), no colour, no status category.
-     * The visible "AURA is active" surface is the overlay's own chip, shown only while it works.
+     * The visible "THAKUR OS is active" surface is the overlay's own chip, shown only while it works.
      */
     private fun createNotification(isListening: Boolean): Notification {
         val toggleIntent = Intent(this, WakeWordListeningService::class.java).apply {
@@ -645,14 +678,15 @@ class WakeWordListeningService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val activePhrase = ThakurSecurityStore.getWakeWord(this)
         val statusText = if (isListening) {
-            "Say \"Wake up AURA\""
+            "Say \"$activePhrase\""
         } else {
             "Wake word paused"
         }
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("AURA wake word")
+            .setContentTitle("THAKUR OS wake word")
             .setContentText(statusText)
             .setSmallIcon(R.drawable.ic_notification)
             .setOngoing(true)

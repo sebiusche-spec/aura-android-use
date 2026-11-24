@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -25,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -35,6 +35,8 @@ import com.aura.aura_ui.data.preferences.DeveloperModeStore
 import com.aura.aura_ui.uistream.UiStreamServer
 import com.aura.aura_ui.uistream.UiStreamStore
 import com.aura.aura_ui.presentation.components.AuraSwitch
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
+import com.aura.aura_ui.presentation.components.LiquidPalette
 import com.aura.aura_ui.presentation.components.MonoSegmented
 import com.aura.aura_ui.presentation.components.MonoTopBar
 import com.aura.aura_ui.presentation.components.rememberMonoScheme
@@ -85,7 +87,7 @@ fun ToolsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(scheme.canvas),
+            .background(Color.Transparent),
     ) {
         // Back is owned by the global capsule nav bar — no redundant top-bar back.
         MonoTopBar(
@@ -112,7 +114,14 @@ fun ToolsScreen(
         ) {
             itemsIndexed(visible, key = { _, t -> t.name }) { index, tool ->
                 val shape = groupedShape(index, visible.size)
-                Surface(shape = shape, color = scheme.card, modifier = Modifier.fillMaxWidth()) {
+                LiquidGlassSurface(
+                    shape = shape,
+                    cornerRadiusDp = if (index == 0 || index == visible.lastIndex) 24.dp else 0.dp,
+                    strongBlur = false,
+                    tintAlpha = 0.56f,
+                    prismIntensity = if (index == 0 || index == visible.lastIndex) 0.85f else 0.35f,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
                     Column {
                         Row(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -175,7 +184,14 @@ private fun RecordableVoiceRow(scheme: MonoScheme) {
     val context = LocalContext.current
     val recordable by RecordableVoiceStore.enabled.collectAsState()
 
-    Surface(shape = Mono.ShapeCard, color = scheme.card, modifier = Modifier.fillMaxWidth()) {
+    LiquidGlassSurface(
+        shape = Mono.ShapeCard,
+        cornerRadiusDp = 24.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+        prismIntensity = 0.85f,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -230,7 +246,14 @@ private fun DeveloperModeSection(scheme: MonoScheme) {
             modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
         )
 
-        Surface(shape = Mono.ShapeCard, color = scheme.card, modifier = Modifier.fillMaxWidth()) {
+        LiquidGlassSurface(
+            shape = Mono.ShapeCard,
+            cornerRadiusDp = 24.dp,
+            strongBlur = false,
+            tintAlpha = 0.56f,
+            prismIntensity = 0.85f,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Row(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -259,9 +282,12 @@ private fun DeveloperModeSection(scheme: MonoScheme) {
         AnimatedVisibility(visible = enabled) {
             Column {
                 Spacer(modifier = Modifier.height(8.dp))
-                Surface(
+                LiquidGlassSurface(
                     shape = Mono.ShapeCard,
-                    color = scheme.card,
+                    cornerRadiusDp = 24.dp,
+                    strongBlur = false,
+                    tintAlpha = 0.56f,
+                    prismIntensity = 0.85f,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -288,7 +314,13 @@ private fun DeveloperModeSection(scheme: MonoScheme) {
                         Spacer(modifier = Modifier.height(12.dp))
                         // Shell-neutral: `VAR=1 cmd` is bash-only and fails in
                         // PowerShell/cmd, where this is most likely to be pasted.
-                        Surface(shape = Mono.ShapeChip, color = scheme.chip) {
+                        LiquidGlassSurface(
+                            shape = Mono.ShapeChip,
+                            cornerRadiusDp = 12.dp,
+                            strongBlur = false,
+                            tintAlpha = 0.45f,
+                            accentGlow = LiquidPalette.SilkCyan,
+                        ) {
                             Text(
                                 text = "aura-mcp daemon --enable-adb",
                                 style = MaterialTheme.typography.bodySmall.copy(
@@ -334,7 +366,14 @@ private fun UiStreamRow(scheme: MonoScheme) {
     remember(context) { UiStreamStore.hydrate(context) }
     val on by UiStreamStore.enabled.collectAsState()
 
-    Surface(shape = Mono.ShapeCard, color = scheme.card, modifier = Modifier.fillMaxWidth()) {
+    LiquidGlassSurface(
+        shape = Mono.ShapeCard,
+        cornerRadiusDp = 24.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+        prismIntensity = 0.85f,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -366,7 +405,13 @@ private fun UiStreamRow(scheme: MonoScheme) {
             AnimatedVisibility(visible = on) {
                 Column {
                     Spacer(modifier = Modifier.height(12.dp))
-                    Surface(shape = Mono.ShapeChip, color = scheme.chip) {
+                    LiquidGlassSurface(
+                        shape = Mono.ShapeChip,
+                        cornerRadiusDp = 12.dp,
+                        strongBlur = false,
+                        tintAlpha = 0.45f,
+                        accentGlow = LiquidPalette.SilkCyan,
+                    ) {
                         Text(
                             text = "adb forward tcp:${UiStreamServer.DEFAULT_PORT} " +
                                 "tcp:${UiStreamServer.DEFAULT_PORT}",
@@ -437,26 +482,26 @@ private fun ToolTagChip(tag: ToolTag, scheme: MonoScheme) {
         ToolTag.WRITE -> "WRITE"
         ToolTag.AGENT -> "AGENT"
     }
-    val filledInk = tag == ToolTag.WRITE
-    Surface(
+    val glow = when (tag) {
+        ToolTag.WRITE -> LiquidPalette.SilkViolet
+        ToolTag.AGENT -> LiquidPalette.SilkCyan
+        ToolTag.READ -> null
+    }
+    LiquidGlassSurface(
         shape = Mono.ShapeChip,
-        color = when (tag) {
-            ToolTag.WRITE -> if (scheme.isDark) androidx.compose.ui.graphics.Color.White else Mono.Ink
-            else -> scheme.chip
-        },
-        border = if (tag == ToolTag.AGENT) {
-            androidx.compose.foundation.BorderStroke(1.dp, scheme.outline)
-        } else {
-            null
-        },
+        cornerRadiusDp = 12.dp,
+        strongBlur = false,
+        tintAlpha = if (tag == ToolTag.WRITE) 0.62f else 0.42f,
+        prismIntensity = if (tag == ToolTag.WRITE) 1.15f else 0.7f,
+        accentGlow = glow,
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-            color = if (filledInk) {
-                if (scheme.isDark) Mono.Ink else Mono.TextOnInk
-            } else {
-                scheme.textSecondary
+            color = when (tag) {
+                ToolTag.WRITE -> Color.White
+                ToolTag.AGENT -> LiquidPalette.SilkCyan
+                ToolTag.READ -> scheme.textSecondary
             },
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
         )

@@ -11,6 +11,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -24,7 +25,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
@@ -45,22 +49,35 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -74,7 +91,9 @@ import com.aura.aura_ui.presentation.components.*
 import com.aura.aura_ui.presentation.utils.AuraHapticType
 import com.aura.aura_ui.presentation.utils.rememberHapticFeedback
 import com.aura.aura_ui.ui.theme.*
+import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlin.math.sin
 import kotlinx.coroutines.flow.first
 
 // ============================================================================
@@ -186,6 +205,9 @@ data class VoiceAssistantState(
     // Screen-share (MediaProjection) is currently held — AURA can see the screen. Drives the
     // brand-tinted screen-share toggle in the input pill.
     val isScreenSharing: Boolean = false,
+    // Secret Code gate when THAKUR OS Security lock is ON.
+    val isSecretLocked: Boolean = false,
+    val secretError: String? = null,
 )
 
 /**
@@ -215,6 +237,9 @@ data class VoiceAssistantCallbacks(
     // Per-message feedback on an AI reply.
     val onMessageLike: (ConversationMessage) -> Unit = {},
     val onMessageDislike: (ConversationMessage) -> Unit = {},
+    // Secret Code gate actions.
+    val onSubmitSecret: (String) -> Unit = {},
+    val onSpeakSecret: () -> Unit = {},
 )
 
 /**
@@ -319,135 +344,226 @@ fun VoiceAssistantOverlay(
                     },
                 verticalArrangement = Arrangement.Bottom
             ) {
-                // HITL question card — when the agent calls ask_user, this floats
-                // just above the pill with tap-choices + an "Other…" chip. Observes
-                // the process-wide AskUserBroker directly; hidden when nothing pends.
-                // "Other…" activates the input pill (the one focusable text path in
-                // this window); the submitted line is routed to the pending question.
-                //
-                // Collected HERE rather than inside each consumer so the card and the
-                // pill react to the same emission — the pill must be in text mode
-                // before "Other…" can hand it focus.
-                val pendingQuestion by AskUserBroker.shared.pending.collectAsState()
+                if (state.isSecretLocked) {
+                    SecretLockOverlayCard(
+                        state = state,
+                        onSubmitSecret = callbacks.onSubmitSecret,
+                        onSpeakSecret = callbacks.onSpeakSecret,
+                        onDismiss = callbacks.onDismiss,
+                        onInputActivate = callbacks.onInputActivate,
+                        onInputDeactivate = callbacks.onInputDeactivate,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                    )
+                } else {
+                    val pendingQuestion by AskUserBroker.shared.pending.collectAsState()
 
-                AskUserCard(
-                    pending = pendingQuestion,
-                    onOtherTapped = callbacks.onInputActivate,
-                    colors = colors,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
-
-                // Resume chip — floats just above the pill when an interrupted run is offered.
-                state.resumeOffer?.let { offer ->
-                    ResumeChip(
-                        offer = offer,
+                    AskUserCard(
+                        pending = pendingQuestion,
+                        onOtherTapped = callbacks.onInputActivate,
                         colors = colors,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    var pillDragDy by remember { mutableFloatStateOf(0f) }
+                    val dismissThresholdPx = with(density) { 72.dp.toPx() }
+
+                    // THAKUR OS Liquid Glass Bottom Speaking Bar
+                    InputBar(
+                        state = state,
+                        colors = colors,
+                        onMicClick = callbacks.onMicClick,
+                        onTextSubmit = callbacks.onTextSubmit,
+                        onDismiss = callbacks.onDismiss,
+                        onSettingsClick = callbacks.onSettingsClick,
+                        onInputActivate = callbacks.onInputActivate,
+                        onInputDeactivate = callbacks.onInputDeactivate,
                         onResumeClick = callbacks.onResumeClick,
-                        onResumeDismiss = callbacks.onResumeDismiss,
-                        modifier = Modifier.padding(horizontal = 20.dp)
+                        questionPending = pendingQuestion != null,
+                        modifier = Modifier
+                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                            .pointerInput(Unit) {
+                                detectVerticalDragGestures(
+                                    onDragStart = { pillDragDy = 0f },
+                                    onDragCancel = { pillDragDy = 0f },
+                                    onDragEnd = {
+                                        if (pillDragDy > dismissThresholdPx) callbacks.onDismiss()
+                                        pillDragDy = 0f
+                                    },
+                                ) { _, dragAmount -> pillDragDy += dragAmount }
+                            }
                     )
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Swipe down on the pill to close. Tapping the empty space above no
-                // longer dismisses — that space is outside the window now and belongs to
-                // the app behind — so the gesture lives here instead. The transcript
-                // sheet owns its own vertical drag (expand/collapse), so putting this on
-                // the pill keeps the two from competing for the same pointer.
-                var pillDragDy by remember { mutableFloatStateOf(0f) }
-                val dismissThresholdPx = with(density) { 72.dp.toPx() }
-
-                // Input Bar (Compact Floating Pill)
-                InputBar(
-                    state = state,
-                    colors = colors,
-                    onMicClick = callbacks.onMicClick,
-                    onTextSubmit = callbacks.onTextSubmit,
-                    onDismiss = callbacks.onDismiss,
-                    onSettingsClick = callbacks.onSettingsClick,
-                    onInputActivate = callbacks.onInputActivate,
-                    onInputDeactivate = callbacks.onInputDeactivate,
-                    questionPending = pendingQuestion != null,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                        .pointerInput(Unit) {
-                            detectVerticalDragGestures(
-                                onDragStart = { pillDragDy = 0f },
-                                onDragCancel = { pillDragDy = 0f },
-                                onDragEnd = {
-                                    if (pillDragDy > dismissThresholdPx) callbacks.onDismiss()
-                                    pillDragDy = 0f
-                                },
-                            ) { _, dragAmount -> pillDragDy += dragAmount }
-                        }
-                )
             }
         }
     }
 }
 
-/**
- * Resume-an-interrupted-run chip, floating just above the input pill.
- * Reuses the persisted [ResumeOffer]; never auto-resumes.
- */
 @Composable
-private fun ResumeChip(
-    offer: com.aura.aura_ui.agent.ledger.ResumeOffer,
-    colors: OverlayColorScheme,
-    onResumeClick: () -> Unit,
-    onResumeDismiss: () -> Unit,
+private fun SecretLockOverlayCard(
+    state: VoiceAssistantState,
+    onSubmitSecret: (String) -> Unit,
+    onSpeakSecret: () -> Unit,
+    onDismiss: () -> Unit,
+    onInputActivate: () -> Unit,
+    onInputDeactivate: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = colors.surface.copy(alpha = 0.94f),
-        border = BorderStroke(1.dp, colors.textTertiary.copy(alpha = 0.25f)),
-        shadowElevation = 10.dp,
+    var secretText by remember { mutableStateOf("") }
+    var secretVisible by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(state.inputActive) {
+        if (state.inputActive) {
+            focusRequester.requestFocus()
+            keyboard?.show()
+        }
+    }
+
+    LiquidGlassSurface(
         modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(26.dp),
+        cornerRadiusDp = 26.dp,
+        accentGlow = if (state.secretError != null) LiquidPalette.DangerRed else LiquidPalette.SilkViolet,
     ) {
-        Row(
-            modifier = Modifier.padding(start = 12.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Icon(
-                imageVector = Icons.Default.Refresh,
-                contentDescription = null,
-                tint = colors.textSecondary,
-                modifier = Modifier.size(18.dp),
-            )
-            Text(
-                text = offer.chipLabel(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-            Surface(
-                onClick = onResumeClick,
-                shape = Mono.ShapePill,
-                color = Mono.Ink,
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.16f)),
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Box(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                LiquidGlassSurface(
+                    shape = CircleShape,
+                    cornerRadiusDp = 18.dp,
+                    accentGlow = LiquidPalette.PrismBlue,
+                    modifier = Modifier.size(36.dp),
                 ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            imageVector = Icons.Filled.Lock,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                }
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Resume",
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                        color = Mono.TextOnInk,
+                        text = "THAKUR OS Locked",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White,
+                    )
+                    Text(
+                        text = if (state.isListening) "Listening for secret code…" else "Speak or enter secret code",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (state.isListening) LiquidPalette.SilkCyan else Color.White.copy(alpha = 0.72f),
                     )
                 }
             }
-            IconButton(onClick = onResumeDismiss, modifier = Modifier.size(32.dp)) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Dismiss",
-                    tint = colors.textSecondary,
-                    modifier = Modifier.size(18.dp),
+
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = secretText,
+                    onValueChange = { secretText = it },
+                    placeholder = { Text("Secret word or PIN", color = Color.White.copy(alpha = 0.5f)) },
+                    singleLine = true,
+                    visualTransformation = if (secretVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (secretText.isNotBlank()) {
+                                onSubmitSecret(secretText)
+                                secretText = ""
+                                onInputDeactivate()
+                            }
+                        },
+                    ),
+                    trailingIcon = {
+                        LiquidGlassSurface(
+                            modifier = Modifier
+                                .padding(end = 4.dp)
+                                .size(34.dp),
+                            shape = CircleShape,
+                            cornerRadiusDp = 17.dp,
+                            strongBlur = false,
+                            tintAlpha = 0.48f,
+                            accentGlow = LiquidPalette.PrismBlue,
+                            onClick = { secretVisible = !secretVisible },
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Icon(
+                                    imageVector = if (secretVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                    contentDescription = if (secretVisible) "Hide secret" else "Show secret",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+                    },
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester)
+                        .onFocusChanged { if (!it.isFocused && state.inputActive) onInputDeactivate() },
                 )
+                if (!state.inputActive) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                            ) { onInputActivate() },
+                    )
+                }
+            }
+
+            if (state.secretError != null) {
+                Text(
+                    text = state.secretError,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                    color = LiquidPalette.DangerRed,
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                LiquidGlassButton(
+                    onClick = onSpeakSecret,
+                    accentGlow = if (state.isListening) LiquidPalette.SilkCyan else LiquidPalette.SilkViolet,
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                ) {
+                    Icon(Icons.Filled.Mic, contentDescription = "Speak secret", modifier = Modifier.size(18.dp))
+                    Text(if (state.isListening) "Stop" else "Speak")
+                }
+                LiquidGlassButton(
+                    onClick = onDismiss,
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                ) {
+                    Text("Cancel")
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                LiquidGlassButton(
+                    onClick = {
+                        onSubmitSecret(secretText)
+                        secretText = ""
+                        onInputDeactivate()
+                    },
+                    enabled = secretText.isNotBlank(),
+                    accentGlow = LiquidPalette.PrismBlue,
+                    contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp),
+                ) {
+                    Text("Unlock")
+                }
             }
         }
     }
@@ -540,7 +656,7 @@ private fun EmptyOverlayState(
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            text = "Hi, I'm AURA",
+            text = "Hi, I'm THAKUR OS",
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Medium
             ),
@@ -732,10 +848,30 @@ private fun OverlayMessageBubble(
             }
         }
 
-        // AURA reply carries the colored logo avatar on its outer (right) edge.
+        // THAKUR OS reply carries the glowing T+Crown emblem on its outer (right) edge.
         if (!isUser) {
             Spacer(modifier = Modifier.width(8.dp))
-            AuraLogoAvatar(size = 28.dp, modifier = Modifier.padding(bottom = 2.dp))
+            LiquidGlassSurface(
+                modifier = Modifier
+                    .padding(bottom = 2.dp)
+                    .size(30.dp),
+                shape = CircleShape,
+                cornerRadiusDp = 15.dp,
+                strongBlur = false,
+                tintAlpha = 0.52f,
+                prismIntensity = 1.2f,
+                accentGlow = LiquidPalette.PrismBlue,
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.thakur_crown_t_mark),
+                    contentDescription = "THAKUR OS",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(3.dp)
+                        .clip(CircleShape),
+                )
+            }
         }
     }
 }
@@ -1269,183 +1405,95 @@ private fun InputBar(
     onSettingsClick: () -> Unit,
     onInputActivate: () -> Unit = {},
     onInputDeactivate: () -> Unit = {},
-    /**
-     * True while the agent is suspended on an `ask_user` question. Forces the pill into TEXT mode
-     * — see [showWave] below for why the waveform must lose this fight.
-     */
+    onResumeClick: () -> Unit = {},
     questionPending: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     var textInput by remember { mutableStateOf("") }
     val hapticFeedback = rememberHapticFeedback()
 
-    // Mic button animation
-    val infiniteTransition = rememberInfiniteTransition(label = "mic_glow")
-    val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
+    val infiniteTransition = rememberInfiniteTransition(label = "thakur_bar_anim")
+    val waveClock by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = (Math.PI * 2.0).toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1350, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "barWaveClock",
+    )
+    val glowPulse by infiniteTransition.animateFloat(
+        initialValue = 0.72f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
+            animation = tween(durationMillis = 1500, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse,
         ),
-        label = "glow"
+        label = "barGlowPulse",
     )
-    
-    // A pending ask_user question BEATS the waveform, always.
-    //
-    // This was the "I can't type anything into the Other field" bug. ask_user fires *during* a
-    // task, and in a Live session that means isGeminiLiveSession && isProcessing — so showWave was
-    // true and the pill rendered a waveform INSTEAD of the TextField. Tapping "Other…" flipped the
-    // window focusable and set inputActive, but the focusRequester it targets lives inside the
-    // TextField branch, which was never composed. There was literally nothing on screen to type
-    // into, deterministically, in exactly the situation where the answer is needed most.
+
     val showWave = !questionPending &&
+        !state.inputActive &&
         (
             state.isListening ||
-                (state.isGeminiLiveSession && (state.isProcessing || state.isResponding))
+                state.isProcessing ||
+                state.isResponding ||
+                state.isGeminiLiveSession
             )
 
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(percent = 50),
-        color = colors.inputBarBackground,
-        tonalElevation = 4.dp,
-        shadowElevation = 8.dp
+    val chamferShape = remember {
+        GenericShape { size, _ ->
+            val w = size.width
+            val h = size.height
+            val c = minOf(28f, minOf(w, h) * 0.32f)
+            moveTo(c, 0f)
+            lineTo(w - c, 0f)
+            lineTo(w, c)
+            lineTo(w, h - c)
+            lineTo(w - c, h)
+            lineTo(c, h)
+            lineTo(0f, h - c)
+            lineTo(0f, c)
+            close()
+        }
+    }
+
+    LiquidGlassSurface(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(94.dp)
+            .drawBehind {
+                drawRoundRect(
+                    brush = Brush.horizontalGradient(
+                        listOf(
+                            LiquidPalette.PrismBlue.copy(alpha = 0.78f * glowPulse),
+                            LiquidPalette.SilkViolet.copy(alpha = 0.90f * glowPulse),
+                            LiquidPalette.PrismRose.copy(alpha = 0.72f * glowPulse),
+                            LiquidPalette.PrismBlue.copy(alpha = 0.78f * glowPulse),
+                        ),
+                    ),
+                    cornerRadius = CornerRadius(24.dp.toPx()),
+                    style = Stroke(width = 2.dp.toPx()),
+                )
+            },
+        shape = chamferShape,
+        cornerRadiusDp = 24.dp,
+        strongBlur = true,
+        tintAlpha = 0.76f,
+        prismIntensity = 1.55f,
+        accentGlow = LiquidPalette.SilkViolet,
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            // The screen-share action is intentionally hidden because AURA now reads the
-            // screen through AccessibilityService.takeScreenshot(). Keep this leading slot
-            // useful: it is the direct escape hatch for dismissing the chat pill.
-            IconButton(
-                onClick = {
-                    hapticFeedback(AuraHapticType.LIGHT)
-                    onDismiss()
-                },
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(colors.iconBackground)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close chat",
-                    tint = colors.textSecondary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
-            // Voice waveform or text input field
-            if (showWave) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    VoiceWaveformVisualizer(
-                        // The user's voice only: AURA's playback must not move it.
-                        amplitude = if (state.isListening) state.audioAmplitude else 0f,
-                        colors = colors,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    // Phase verb shown beneath the waveform.
-                    // LISTENING with no transcript → empty: the waveform animation already
-                    // communicates listening state; showing "Listening" alongside the mic
-                    // button is redundant and the user explicitly doesn't want it.
-                    val phaseLabel = when {
-                        state.isListening && state.partialTranscript.isNotBlank() ->
-                            state.partialTranscript
-                        state.isListening -> ""
-                        state.isProcessing -> if (state.isGeminiLiveSession) "Executing task..." else "Thinking..."
-                        state.isResponding -> "Speaking..."
-                        else -> ""
-                    }
-                    if (phaseLabel.isNotBlank()) {
-                        Text(
-                            text = phaseLabel,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (state.isListening && state.partialTranscript.isNotBlank())
-                                colors.textPrimary
-                            else
-                                colors.textSecondary,
-                            maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 4.dp, vertical = 2.dp)
-                        )
-                    }
-                }
-            } else {
-                val focusRequester = remember { FocusRequester() }
-                val keyboard = LocalSoftwareKeyboardController.current
-                // The host overlay window is FLAG_NOT_FOCUSABLE by default, so the IME
-                // can't attach until the input is activated. Once the service flips the
-                // window focusable (state.inputActive), request focus + show the keyboard.
-                LaunchedEffect(state.inputActive) {
-                    if (state.inputActive) {
-                        runCatching { focusRequester.requestFocus() }
-                        keyboard?.show()
-                    }
-                }
-                Box(modifier = Modifier.weight(1f)) {
-                    TextField(
-                        value = textInput,
-                        onValueChange = { textInput = it },
-                        placeholder = {
-                            Text(
-                                text = "Ask anything",
-                                color = colors.textSecondary,
-                                style = MaterialTheme.typography.bodyMedium,
-                                maxLines = 1,
-                                softWrap = false,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(focusRequester)
-                            .onFocusChanged { if (!it.isFocused && state.inputActive) onInputDeactivate() },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            cursorColor = colors.accentBlue,
-                            focusedTextColor = colors.textPrimary,
-                            unfocusedTextColor = colors.textPrimary
-                        ),
-                        textStyle = MaterialTheme.typography.bodyMedium,
-                        singleLine = true
-                    )
-                    // Tap-to-activate scrim — present only until the window is focusable.
-                    // Touches reach views even in a FLAG_NOT_FOCUSABLE window, so this
-                    // fires reliably where the TextField's own focus request cannot.
-                    if (!state.inputActive) {
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
-                                ) { onInputActivate() }
-                        )
-                    }
-                }
-            }
-            
-            // Primary action — the colored Aura logo on a white round (replaces the mic).
-            // Static; tap to start/stop listening or end an active Gemini Live session.
+            // Left: T + Crown logo in glowing neon circle (primary mic / Gemini Live toggle)
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(Color.White)
+                    .size(72.dp)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
@@ -1459,62 +1507,276 @@ private fun InputBar(
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                AuraLogoAvatar(size = 40.dp)
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .blur(10.dp)
+                        .background(
+                            Brush.radialGradient(
+                                listOf(
+                                    LiquidPalette.SilkViolet.copy(alpha = 0.62f * glowPulse),
+                                    LiquidPalette.PrismBlue.copy(alpha = 0.45f * glowPulse),
+                                    Color.Transparent,
+                                ),
+                            ),
+                            CircleShape,
+                        ),
+                )
+                Canvas(modifier = Modifier.size(66.dp)) {
+                    drawCircle(
+                        brush = Brush.sweepGradient(
+                            listOf(
+                                LiquidPalette.PrismBlue,
+                                LiquidPalette.SilkViolet,
+                                LiquidPalette.PrismRose,
+                                LiquidPalette.PrismBlue,
+                            ),
+                        ),
+                        style = Stroke(width = 2.2.dp.toPx()),
+                    )
+                }
+                Image(
+                    painter = painterResource(R.drawable.thakur_crown_t_mark),
+                    contentDescription = "THAKUR OS Voice",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(56.dp),
+                )
             }
-            
-            // Send button (shown when text is entered)
-            AnimatedVisibility(visible = textInput.isNotBlank()) {
-                IconButton(
+
+            // Vertical neon divider
+            Box(
+                modifier = Modifier
+                    .width(1.5.dp)
+                    .height(54.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color.Transparent,
+                                LiquidPalette.PrismBlue.copy(alpha = 0.85f),
+                                Color.Transparent,
+                            ),
+                        ),
+                    ),
+            )
+
+            // Center: THAKUR OS + Speaking... + live animated blue-purple waveform bars (or text input when typing)
+            if (showWave) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) { onInputActivate() },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.Black)) {
+                                append("THAKUR ")
+                            }
+                            withStyle(
+                                SpanStyle(
+                                    brush = Brush.horizontalGradient(
+                                        listOf(LiquidPalette.PrismBlue, LiquidPalette.PrismRose, LiquidPalette.SilkViolet),
+                                    ),
+                                    fontWeight = FontWeight.Black,
+                                ),
+                            ) {
+                                append("OS")
+                            }
+                        },
+                        fontSize = 15.sp,
+                        letterSpacing = 1.2.sp,
+                        maxLines = 1,
+                    )
+
+                    val phaseLabel = when {
+                        state.isListening && state.partialTranscript.isNotBlank() -> state.partialTranscript
+                        state.isListening -> "Listening..."
+                        state.isProcessing -> if (state.isGeminiLiveSession) "Executing task..." else "Thinking..."
+                        state.isResponding -> "Speaking..."
+                        else -> "Speaking..."
+                    }
+                    Text(
+                        text = phaseLabel,
+                        fontSize = 14.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (state.isListening && state.partialTranscript.isNotBlank()) Color.White else LiquidPalette.PrismBlue,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(Modifier.height(5.dp))
+                    VoiceWaveformVisualizer(
+                        amplitude = if (state.isListening) state.audioAmplitude else 0.62f,
+                        activeWaveClock = waveClock,
+                        isAlwaysAnimating = state.isResponding || state.isProcessing || state.isGeminiLiveSession || state.isListening,
+                        colors = colors,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            } else {
+                val focusRequester = remember { FocusRequester() }
+                val keyboard = LocalSoftwareKeyboardController.current
+                LaunchedEffect(state.inputActive) {
+                    if (state.inputActive) {
+                        runCatching { focusRequester.requestFocus() }
+                        keyboard?.show()
+                    }
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            text = buildAnnotatedString {
+                                withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.Black)) {
+                                    append("THAKUR ")
+                                }
+                                withStyle(
+                                    SpanStyle(
+                                        brush = Brush.horizontalGradient(
+                                            listOf(LiquidPalette.PrismBlue, LiquidPalette.PrismRose, LiquidPalette.SilkViolet),
+                                        ),
+                                        fontWeight = FontWeight.Black,
+                                    ),
+                                ) {
+                                    append("OS")
+                                }
+                            },
+                            fontSize = 13.sp,
+                            letterSpacing = 1.sp,
+                        )
+                        state.resumeOffer?.let { offer ->
+                            Text(
+                                text = "Resume ↗",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = LiquidPalette.PrismBlue,
+                                maxLines = 1,
+                                modifier = Modifier.clickable { onResumeClick() },
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(2.dp))
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        TextField(
+                            value = textInput,
+                            onValueChange = { textInput = it },
+                            placeholder = {
+                                Text(
+                                    text = "Ask THAKUR OS anything...",
+                                    color = Color.White.copy(alpha = 0.65f),
+                                    fontSize = 13.5.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester)
+                                .onFocusChanged { if (!it.isFocused && state.inputActive) onInputDeactivate() },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                cursorColor = LiquidPalette.PrismBlue,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                            ),
+                            textStyle = TextStyle(color = Color.White, fontSize = 14.sp),
+                            singleLine = true,
+                        )
+                        if (!state.inputActive) {
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null,
+                                    ) { onInputActivate() },
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Right: Send when typing, otherwise circular neon X close button
+            if (textInput.isNotBlank() && !showWave) {
+                LiquidGlassSurface(
+                    modifier = Modifier.size(42.dp),
+                    shape = CircleShape,
+                    cornerRadiusDp = 21.dp,
+                    strongBlur = false,
+                    tintAlpha = 0.72f,
+                    prismIntensity = 1.45f,
+                    accentGlow = LiquidPalette.PrismBlue,
                     onClick = {
                         hapticFeedback(AuraHapticType.MEDIUM)
                         onTextSubmit(textInput)
                         textInput = ""
-                        // Restore the non-focusable overlay window + hide the IME.
                         onInputDeactivate()
                     },
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(colors.accentBlue)
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Send",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = "Send",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                }
+            } else {
+                LiquidGlassSurface(
+                    modifier = Modifier.size(40.dp),
+                    shape = CircleShape,
+                    cornerRadiusDp = 20.dp,
+                    strongBlur = false,
+                    tintAlpha = 0.68f,
+                    prismIntensity = 1.4f,
+                    accentGlow = LiquidPalette.SilkViolet,
+                    onClick = {
+                        hapticFeedback(AuraHapticType.LIGHT)
+                        onDismiss()
+                    },
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-// ============================================================================
-// NEW COMPONENTS
-// ============================================================================
-
-/**
- * The mic level as a voice-recorder trace: bars that scroll left, one new bar every
- * [WAVE_SAMPLE_MS] from the live mic level. Flat and still when nobody is speaking.
- *
- * - Contract: [amplitude] is linear RMS as a fraction of full scale (0..1), the scale every
- *   capture path reports. Pass 0 when not listening: the trace scrolls flat, then stops.
- * - Why dB: speech RMS sits around 0.01..0.2 of full scale, so linear bars would barely move.
- *   [waveLevel] maps [WAVE_FLOOR_DB]..[WAVE_CEIL_DB] onto the bar height, and the floor keeps
- *   room noise flat.
- */
 @Composable
 private fun VoiceWaveformVisualizer(
     amplitude: Float,
     colors: OverlayColorScheme,
     modifier: Modifier = Modifier,
+    activeWaveClock: Float = 0f,
+    isAlwaysAnimating: Boolean = true,
 ) {
     val levels = remember { mutableStateListOf<Float>().apply { repeat(WAVE_BARS) { add(0f) } } }
     val latest by rememberUpdatedState(amplitude)
 
     LaunchedEffect(Unit) {
         while (true) {
-            // Silent and already flat: park until the voice comes back, so nothing redraws.
             if (waveLevel(latest) == 0f && levels.all { it == 0f }) {
                 snapshotFlow { waveLevel(latest) }.first { it > 0f }
             }
@@ -1524,23 +1786,36 @@ private fun VoiceWaveformVisualizer(
         }
     }
 
-    val barColor = colors.textSecondary
     Canvas(
         modifier = modifier
-            .height(48.dp)
+            .height(26.dp)
             .fillMaxWidth()
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 4.dp),
     ) {
         val step = size.width / WAVE_BARS
-        val stroke = step * 0.55f
+        val stroke = (step * 0.48f).coerceAtLeast(2.dp.toPx())
         val minH = stroke
-        val maxH = size.height * 0.9f
+        val maxH = size.height * 0.92f
         val midY = size.height / 2f
-        levels.forEachIndexed { i, level ->
-            val h = minH + (maxH - minH) * level
+        val centerIdx = (WAVE_BARS - 1) / 2f
+        levels.forEachIndexed { i, micLevel ->
+            val distNorm = abs(i - centerIdx) / centerIdx
+            val envelope = (1f - distNorm * distNorm * 0.85f).coerceAtLeast(0.16f)
+            val animatedFallback = if (isAlwaysAnimating) {
+                0.35f + 0.65f * ((sin(activeWaveClock * 1.4f + i * 0.55f) + 1f) * 0.5f)
+            } else {
+                0f
+            }
+            val effective = maxOf(micLevel, animatedFallback * envelope)
+            val h = minH + (maxH - minH) * effective
             val x = step * i + step / 2f
+            val barColor = when {
+                i < WAVE_BARS / 2 -> LiquidPalette.PrismBlue
+                i < WAVE_BARS * 3 / 4 -> LiquidPalette.SilkViolet
+                else -> LiquidPalette.PrismRose
+            }
             drawLine(
-                color = barColor.copy(alpha = 0.45f + 0.55f * level),
+                color = barColor.copy(alpha = 0.65f + 0.35f * effective),
                 start = Offset(x, midY - h / 2f),
                 end = Offset(x, midY + h / 2f),
                 strokeWidth = stroke,
@@ -1589,37 +1864,39 @@ private fun MessageActions(
     onShare: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = colors.surfaceVariant.copy(alpha = 0.8f),
-        modifier = modifier
+    LiquidGlassSurface(
+        shape = RoundedCornerShape(14.dp),
+        cornerRadiusDp = 14.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+        modifier = modifier,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             MessageActionButton(
                 icon = Icons.Default.ContentCopy,
                 contentDescription = "Copy",
-                tint = colors.textSecondary,
+                tint = Color.White.copy(alpha = 0.85f),
                 onClick = onCopy
             )
             MessageActionButton(
                 icon = if (reaction == 1) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
                 contentDescription = "Like",
-                tint = if (reaction == 1) AuraBrandViolet else colors.textSecondary,
+                tint = if (reaction == 1) LiquidPalette.SilkCyan else Color.White.copy(alpha = 0.85f),
                 onClick = onLike
             )
             MessageActionButton(
                 icon = if (reaction == -1) Icons.Filled.ThumbDown else Icons.Outlined.ThumbDown,
                 contentDescription = "Dislike",
-                tint = if (reaction == -1) AuraBrandMagenta else colors.textSecondary,
+                tint = if (reaction == -1) LiquidPalette.DangerRed else Color.White.copy(alpha = 0.85f),
                 onClick = onDislike
             )
             MessageActionButton(
                 icon = Icons.Default.Share,
                 contentDescription = "Share",
-                tint = colors.textSecondary,
+                tint = Color.White.copy(alpha = 0.85f),
                 onClick = onShare
             )
         }
@@ -1634,16 +1911,22 @@ private fun MessageActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    IconButton(
+    LiquidGlassSurface(
+        modifier = modifier.size(32.dp),
+        shape = CircleShape,
+        cornerRadiusDp = 16.dp,
+        strongBlur = false,
+        tintAlpha = 0.42f,
         onClick = onClick,
-        modifier = modifier.size(32.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = tint,
-            modifier = Modifier.size(18.dp)
-        )
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = tint,
+                modifier = Modifier.size(16.dp)
+            )
+        }
     }
 }
 
@@ -1719,15 +2002,17 @@ private fun SuggestionChip(
     modifier: Modifier = Modifier,
 ) {
     val hapticFeedback = rememberHapticFeedback()
-    
-    Surface(
+
+    LiquidGlassSurface(
         onClick = {
             hapticFeedback(AuraHapticType.LIGHT)
             onClick()
         },
-        shape = RoundedCornerShape(16.dp),
-        color = colors.surfaceVariant.copy(alpha = 0.9f),
-        border = BorderStroke(1.dp, colors.accentBlue.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(18.dp),
+        cornerRadiusDp = 18.dp,
+        strongBlur = false,
+        tintAlpha = 0.54f,
+        accentGlow = LiquidPalette.PrismBlue,
         modifier = modifier
     ) {
         Row(
@@ -1738,13 +2023,13 @@ private fun SuggestionChip(
             Icon(
                 imageVector = Icons.Default.Lightbulb,
                 contentDescription = null,
-                tint = colors.accentBlue,
+                tint = LiquidPalette.PrismBlue,
                 modifier = Modifier.size(16.dp)
             )
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodyMedium,
-                color = colors.textPrimary
+                color = Color.White
             )
         }
     }
@@ -1758,15 +2043,17 @@ private fun RecentCommandChip(
     modifier: Modifier = Modifier,
 ) {
     val hapticFeedback = rememberHapticFeedback()
-    
-    Surface(
+
+    LiquidGlassSurface(
         onClick = {
             hapticFeedback(AuraHapticType.LIGHT)
             onClick()
         },
-        shape = RoundedCornerShape(12.dp),
-        color = colors.accentBlue.copy(alpha = 0.3f),
-        border = BorderStroke(1.dp, colors.accentBlue.copy(alpha = 0.4f)),
+        shape = RoundedCornerShape(14.dp),
+        cornerRadiusDp = 14.dp,
+        strongBlur = false,
+        tintAlpha = 0.50f,
+        accentGlow = LiquidPalette.SilkViolet,
         modifier = modifier
     ) {
         Row(
@@ -1777,13 +2064,13 @@ private fun RecentCommandChip(
             Icon(
                 imageVector = Icons.Default.History,
                 contentDescription = null,
-                tint = colors.accentBlue,
+                tint = LiquidPalette.SilkCyan,
                 modifier = Modifier.size(14.dp)
             )
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodySmall,
-                color = colors.textPrimary,
+                color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

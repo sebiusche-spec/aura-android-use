@@ -14,12 +14,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.IosShare
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,6 +49,9 @@ import com.aura.aura_ui.mcp.log.TraceEntry
 import com.aura.aura_ui.mcp.log.Utterance
 import com.aura.aura_ui.mcp.log.buildTraceEntries
 import com.aura.aura_ui.mcp.log.summarize
+import com.aura.aura_ui.presentation.components.LiquidGlassButton
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
+import com.aura.aura_ui.presentation.components.LiquidPalette
 import com.aura.aura_ui.presentation.components.MonoTopBar
 import com.aura.aura_ui.presentation.components.rememberMonoScheme
 import com.aura.aura_ui.presentation.screens.trace.FlowRowChips
@@ -176,7 +179,7 @@ fun AgentTraceScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(scheme.canvas),
+            .background(Color.Transparent),
     ) {
         // Back is owned by the global capsule nav bar — no redundant top-bar back.
         MonoTopBar(
@@ -231,34 +234,42 @@ fun AgentTraceScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(Mono.ShapeChip)
-                        .background(scheme.chip)
-                        .clickable {
-                            TraceVisibility.setShowFull(context, !showInternals)
-                            internalsToggle++
-                        }
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                LiquidGlassSurface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = Mono.ShapeChip,
+                    cornerRadiusDp = 12.dp,
+                    strongBlur = false,
+                    tintAlpha = 0.52f,
+                    prismIntensity = 0.9f,
+                    accentGlow = if (showInternals) LiquidPalette.DangerRed else LiquidPalette.SilkCyan,
+                    onClick = {
+                        TraceVisibility.setShowFull(context, !showInternals)
+                        internalsToggle++
+                    },
                 ) {
-                    Text(
-                        if (showInternals) {
-                            "Full log — every prompt, reply, hook, gate and byte"
-                        } else {
-                            "Story — what AURA did, in plain words"
-                        },
-                        style = MaterialTheme.typography.labelMedium,
-                        color = scheme.textSecondary,
-                    )
-                    Text(
-                        if (showInternals) "FULL" else "STORY",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (showInternals) Mono.Blood else scheme.textPrimary,
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            if (showInternals) {
+                                "Full log — every prompt, reply, hook, gate and byte"
+                            } else {
+                                "Story — what THAKUR OS did, in plain words"
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                            color = scheme.textSecondary,
+                        )
+                        Text(
+                            if (showInternals) "FULL" else "STORY",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (showInternals) Mono.Blood else LiquidPalette.SilkCyan,
+                        )
+                    }
                 }
             }
             if (!showInternals) {
@@ -275,7 +286,14 @@ fun AgentTraceScreen(
                 s.budget?.let { b -> item { BudgetCard(b, scheme) } }
                 s.systemPrompt?.takeIf { it.isNotBlank() }?.let { sp ->
                     item {
-                        Surface(shape = Mono.ShapeCardSmall, color = scheme.card, modifier = Modifier.fillMaxWidth()) {
+                        LiquidGlassSurface(
+                            shape = Mono.ShapeCardSmall,
+                            cornerRadiusDp = 16.dp,
+                            strongBlur = false,
+                            tintAlpha = 0.56f,
+                            prismIntensity = 0.8f,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
                             Column(Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
                                 PayloadSection("System prompt", sp, scheme)
                                 RawButtons(
@@ -329,16 +347,16 @@ private fun RawButtons(
     if (present.isEmpty()) return
     FlowRowChips {
         present.forEach { (title, file) ->
-            Text(
-                "$title · ${file.length() / 1024} KB ›",
-                modifier = Modifier
-                    .clip(Mono.ShapePill)
-                    .background(scheme.chip)
-                    .clickable { onRaw(file, title) }
-                    .padding(horizontal = 10.dp, vertical = 5.dp),
-                style = MaterialTheme.typography.labelSmall,
-                color = scheme.textPrimary,
-            )
+            LiquidGlassButton(
+                onClick = { onRaw(file, title) },
+                accentGlow = LiquidPalette.SilkCyan,
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 5.dp),
+            ) {
+                Text(
+                    "$title · ${file.length() / 1024} KB ›",
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
         }
     }
 }
@@ -352,7 +370,14 @@ private fun ResearchDebugCard(
     scheme: MonoScheme,
     onRaw: (File, String) -> Unit,
 ) {
-    Surface(shape = Mono.ShapeCardSmall, color = scheme.card, modifier = Modifier.fillMaxWidth()) {
+    LiquidGlassSurface(
+        shape = Mono.ShapeCardSmall,
+        cornerRadiusDp = 16.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+        prismIntensity = 0.8f,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SectionTitle("Pre-task research", scheme)
             FlowRowChips {
@@ -382,21 +407,29 @@ private fun ResearchDebugCard(
 private fun ExportAction(exporting: Boolean, scheme: MonoScheme, onClick: () -> Unit) {
     if (exporting) {
         CircularProgressIndicator(
-            color = scheme.textSecondary,
+            color = LiquidPalette.SilkCyan,
             strokeWidth = 2.dp,
             modifier = Modifier.padding(12.dp).size(20.dp),
         )
     } else {
-        Icon(
-            Icons.Filled.IosShare,
-            contentDescription = "Export trace as JSON",
-            tint = scheme.textPrimary,
-            modifier = Modifier
-                .clip(CircleShape)
-                .clickable { onClick() }
-                .padding(10.dp)
-                .size(22.dp),
-        )
+        LiquidGlassSurface(
+            modifier = Modifier.size(40.dp),
+            shape = CircleShape,
+            cornerRadiusDp = 20.dp,
+            strongBlur = false,
+            tintAlpha = 0.50f,
+            accentGlow = LiquidPalette.SilkCyan,
+            onClick = onClick,
+        ) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                Icon(
+                    Icons.Filled.IosShare,
+                    contentDescription = "Export trace as JSON",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
     }
 }
 
@@ -434,13 +467,20 @@ private fun TurnBlock(
     dir: File? = null,
     onRaw: (File, String) -> Unit = { _, _ -> },
 ) {
-    Surface(shape = Mono.ShapeCardSmall, color = scheme.card, modifier = Modifier.fillMaxWidth()) {
+    LiquidGlassSurface(
+        shape = Mono.ShapeCardSmall,
+        cornerRadiusDp = 16.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+        prismIntensity = 0.85f,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Column {
             // Header band — the timeline itself: step number, then what the turn cost.
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(scheme.chip)
+                    .background(Color.White.copy(alpha = 0.06f))
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -542,27 +582,25 @@ private fun TurnBlock(
 /** The timeline marker: a zero-padded ink pill, so 3 and 13 line up. */
 @Composable
 private fun StepNumber(number: Int) {
-    Surface(shape = Mono.ShapePill, color = Mono.Ink) {
+    LiquidGlassSurface(
+        shape = Mono.ShapePill,
+        cornerRadiusDp = 14.dp,
+        strongBlur = false,
+        tintAlpha = 0.65f,
+        accentGlow = LiquidPalette.SilkViolet,
+    ) {
         Text(
             number.toString().padStart(2, '0'),
             modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
             fontFamily = FontFamily.Monospace,
-            color = Mono.TextOnInk,
+            color = Color.White,
         )
     }
 }
 
 /**
  * One spoken turn, or one recorded absence.
- *
- * Mono rules apply as everywhere else: black is content (AURA), the hairline chip is the user,
- * and blood is spent ONLY on the entries that mean something went wrong — a lost transcription
- * or a reply the user had to cut off. Those are what someone opens a conversation trace to find,
- * so they are the one thing here allowed to shout.
- *
- * Shares the turn card's full-width geometry: the old left rail is gone from both, or spoken
- * entries would sit indented against nothing.
  */
 @Composable
 private fun SpokenBlock(u: Utterance, scheme: MonoScheme) {
@@ -571,16 +609,24 @@ private fun SpokenBlock(u: Utterance, scheme: MonoScheme) {
     val isAura = u.speaker == "aura"
     val who = when (u.speaker) {
         "user" -> "YOU"
-        "aura" -> "AURA"
+        "aura" -> "THAKUR OS"
         else -> "SYSTEM"
     }
     val accent = when {
         isGap || isCut -> Mono.Blood
-        isAura -> Mono.Ink
+        isAura -> LiquidPalette.SilkCyan
         else -> scheme.textSecondary
     }
 
-    Surface(shape = Mono.ShapeCardSmall, color = scheme.card, modifier = Modifier.fillMaxWidth()) {
+    LiquidGlassSurface(
+        shape = Mono.ShapeCardSmall,
+        cornerRadiusDp = 16.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+        prismIntensity = 0.8f,
+        accentGlow = if (isGap || isCut) LiquidPalette.DangerRed else if (isAura) LiquidPalette.SilkCyan else null,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
         Row(Modifier.height(IntrinsicSize.Min)) {
             // A 3dp edge in place of the old node-and-rail: same "who is speaking" signal,
             // none of the gutter.

@@ -6,19 +6,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,7 +43,7 @@ import com.aura.aura_ui.ui.theme.MonoScheme
  * dark palette separately.
  */
 @Composable
-fun rememberMonoScheme(): MonoScheme = Mono.scheme(dark = false)
+fun rememberMonoScheme(): MonoScheme = Mono.scheme(dark = true)
 
 /**
  * Large-title top bar with optional back button, on the canvas.
@@ -70,12 +69,24 @@ fun MonoTopBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (onBack != null) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = scheme.textPrimary,
-                )
+            LiquidGlassSurface(
+                modifier = Modifier
+                    .padding(end = 10.dp)
+                    .size(40.dp),
+                shape = CircleShape,
+                cornerRadiusDp = 20.dp,
+                strongBlur = false,
+                tintAlpha = 0.5f,
+                onClick = onBack,
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = scheme.textPrimary,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
             }
         }
         Column(modifier = Modifier.weight(1f)) {
@@ -117,12 +128,15 @@ fun MonoCardGroup(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScopeMarker.() -> Unit,
 ) {
-    Surface(
-        shape = Mono.ShapeCard,
-        color = scheme.card,
+    LiquidGlassSurface(
         modifier = modifier.fillMaxWidth(),
+        shape = Mono.ShapeCard,
+        cornerRadiusDp = 24.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+        prismIntensity = 0.85f,
     ) {
-        Column {
+        Column(modifier = Modifier.fillMaxWidth()) {
             ColumnScopeMarker(scheme).content()
         }
     }
@@ -205,7 +219,15 @@ fun ColumnScopeMarker.MonoRow(
         }
     }
     if (onClick != null) {
-        Surface(onClick = onClick, color = Color.Transparent, modifier = modifier.fillMaxWidth()) {
+        LiquidGlassSurface(
+            modifier = modifier.fillMaxWidth(),
+            shape = Mono.ShapeChip,
+            cornerRadiusDp = 12.dp,
+            strongBlur = false,
+            tintAlpha = 0.08f,
+            prismIntensity = 0.35f,
+            onClick = onClick,
+        ) {
             rowContent()
         }
     } else {
@@ -224,29 +246,13 @@ fun MonoSwitch(
     onCheckedChange: ((Boolean) -> Unit)?,
     scheme: MonoScheme,
 ) {
-    val onTrack = if (scheme.isDark) Color(0xFFF0EDE5) else Color(0xFF1C1A17)
-    val onThumb = if (scheme.isDark) Color(0xFF1C1A17) else Color.White
-    Switch(
+    LiquidGlassToggle(
         checked = checked,
         onCheckedChange = onCheckedChange,
-        colors = SwitchDefaults.colors(
-            checkedThumbColor = onThumb,
-            checkedTrackColor = onTrack,
-            checkedBorderColor = Color.Transparent,
-            uncheckedThumbColor = Color.White,
-            uncheckedTrackColor = if (scheme.isDark) Mono.ToggleTrackOffDark else Mono.ToggleTrackOff,
-            uncheckedBorderColor = Color.Transparent,
-            // Disabled (read-only) colors mirror the enabled ones so a locked-on
-            // permission switch still reads clearly as on.
-            disabledCheckedThumbColor = onThumb,
-            disabledCheckedTrackColor = onTrack.copy(alpha = 0.9f),
-            disabledUncheckedThumbColor = Color.White,
-            disabledUncheckedTrackColor = if (scheme.isDark) Mono.ToggleTrackOffDark else Mono.ToggleTrackOff,
-        ),
     )
 }
 
-/** Compact segmented control (e.g. theme Auto/Light/Dark): selected = ink pill. */
+/** Compact Liquid Glass segmented control: selected pill glows with teal Liquid Glass. */
 @Composable
 fun MonoSegmented(
     options: List<String>,
@@ -255,27 +261,30 @@ fun MonoSegmented(
     scheme: MonoScheme,
     modifier: Modifier = Modifier,
 ) {
-    Surface(shape = Mono.ShapePill, color = scheme.chip, modifier = modifier) {
+    LiquidGlassSurface(
+        modifier = modifier,
+        shape = Mono.ShapePill,
+        cornerRadiusDp = 24.dp,
+        strongBlur = true,
+        tintAlpha = 0.46f,
+        prismIntensity = 0.9f,
+    ) {
         Row(modifier = Modifier.padding(3.dp)) {
             options.forEachIndexed { i, label ->
                 val selected = i == selectedIndex
-                Surface(
-                    onClick = { onSelect(i) },
+                LiquidGlassSurface(
                     shape = Mono.ShapePill,
-                    color = when {
-                        selected && scheme.isDark -> Color.White
-                        selected -> Mono.Ink
-                        else -> Color.Transparent
-                    },
+                    cornerRadiusDp = 20.dp,
+                    strongBlur = false,
+                    tintAlpha = if (selected) 0.62f else 0.0f,
+                    prismIntensity = if (selected) 1.25f else 0.0f,
+                    accentGlow = if (selected) LiquidPalette.SilkCyan else null,
+                    onClick = { onSelect(i) },
                 ) {
                     Text(
                         text = label,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = when {
-                            selected && scheme.isDark -> Mono.Ink
-                            selected -> Mono.TextOnInk
-                            else -> scheme.textSecondary
-                        },
+                        color = if (selected) Color.White else scheme.textSecondary,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                     )
                 }

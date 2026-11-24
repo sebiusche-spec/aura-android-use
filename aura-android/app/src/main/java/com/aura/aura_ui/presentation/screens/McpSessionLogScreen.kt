@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Timer
@@ -27,6 +28,7 @@ import com.aura.aura_ui.mcp.log.LiveConversationLogger
 import com.aura.aura_ui.mcp.log.sessionTitle
 import com.aura.aura_ui.mcp.log.McpSessionStore
 import com.aura.aura_ui.mcp.log.SessionLog
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
 import com.aura.aura_ui.presentation.components.rememberMonoScheme
 import com.aura.aura_ui.ui.theme.Mono
 import com.aura.aura_ui.ui.theme.MonoScheme
@@ -60,7 +62,7 @@ fun McpSessionLogScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(scheme.canvas),
+            .background(androidx.compose.ui.graphics.Color.Transparent),
     ) {
         // Header: title + subtitle on the left, retention-settings gear on the right.
         Row(
@@ -84,11 +86,13 @@ fun McpSessionLogScreen(
                     color = scheme.textSecondary,
                 )
             }
-            Surface(
-                onClick = onOpenRetention,
+            LiquidGlassSurface(
                 shape = Mono.ShapePill,
-                color = scheme.chip,
-                border = androidx.compose.foundation.BorderStroke(1.dp, scheme.outline),
+                cornerRadiusDp = 20.dp,
+                strongBlur = false,
+                tintAlpha = 0.50f,
+                prismIntensity = 0.9f,
+                onClick = onOpenRetention,
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -98,13 +102,13 @@ fun McpSessionLogScreen(
                     Icon(
                         Icons.Outlined.Timer,
                         contentDescription = null,
-                        tint = scheme.textPrimary,
+                        tint = androidx.compose.ui.graphics.Color.White,
                         modifier = Modifier.size(16.dp),
                     )
                     Text(
                         "Retention",
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
-                        color = scheme.textPrimary,
+                        color = androidx.compose.ui.graphics.Color.White,
                     )
                 }
             }
@@ -116,7 +120,7 @@ fun McpSessionLogScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    "No logs yet.\nTalk to AURA, run an on-device agent task, or connect an MCP agent — traces show up here.",
+                    "No logs yet.\nTalk to THAKUR OS, run an on-device agent task, or connect an MCP agent — traces show up here.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = scheme.textSecondary,
                     modifier = Modifier.padding(32.dp),
@@ -192,13 +196,14 @@ private fun SessionCard(
     }
     var showConfirm by remember { mutableStateOf(false) }
 
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(Mono.ShapeCard)
-            .clickable { onClick() },
+    LiquidGlassSurface(
+        modifier = Modifier.fillMaxWidth(),
         shape = Mono.ShapeCard,
-        color = scheme.card,
+        cornerRadiusDp = 24.dp,
+        strongBlur = false,
+        tintAlpha = 0.54f,
+        prismIntensity = 0.85f,
+        onClick = { onClick() },
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
@@ -255,13 +260,23 @@ private fun SessionCard(
                     color = scheme.textSecondary,
                 )
             }
-            IconButton(onClick = { showConfirm = true }) {
-                Icon(
-                    Icons.Outlined.DeleteOutline,
-                    contentDescription = "Delete session",
-                    tint = Mono.Blood,
-                    modifier = Modifier.size(20.dp),
-                )
+            com.aura.aura_ui.presentation.components.LiquidGlassSurface(
+                modifier = Modifier.size(34.dp),
+                shape = CircleShape,
+                cornerRadiusDp = 17.dp,
+                strongBlur = false,
+                tintAlpha = 0.45f,
+                accentGlow = com.aura.aura_ui.presentation.components.LiquidPalette.DangerRed,
+                onClick = { showConfirm = true },
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(
+                        Icons.Outlined.DeleteOutline,
+                        contentDescription = "Delete session",
+                        tint = Mono.Blood,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
             }
         }
     }
@@ -272,12 +287,19 @@ private fun SessionCard(
             title = { Text("Delete session?") },
             text = { Text("This removes the metadata and all captured screenshots. Cannot be undone.") },
             confirmButton = {
-                TextButton(onClick = { showConfirm = false; onDelete() }) {
-                    Text("Delete", color = Mono.Blood)
+                com.aura.aura_ui.presentation.components.LiquidGlassButton(
+                    onClick = { showConfirm = false; onDelete() },
+                    destructive = true,
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                ) {
+                    Text("Delete")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirm = false }) { Text("Cancel") }
+                com.aura.aura_ui.presentation.components.LiquidGlassButton(
+                    onClick = { showConfirm = false },
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                ) { Text("Cancel") }
             },
         )
     }

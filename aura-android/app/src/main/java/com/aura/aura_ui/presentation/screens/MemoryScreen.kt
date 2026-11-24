@@ -15,21 +15,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.foundation.layout.PaddingValues
 import com.aura.aura_ui.presentation.components.AuraScreenScaffold
+import com.aura.aura_ui.presentation.components.LiquidGlassButton
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
+import com.aura.aura_ui.presentation.components.LiquidGlassToggle
+import com.aura.aura_ui.presentation.components.LiquidPalette
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -93,7 +89,12 @@ fun MemoryScreen(
 
             ProfileCard(profile = state.profile, vm = vm)
 
-            Surface(shape = RoundedCornerShape(14.dp), tonalElevation = 1.dp) {
+            LiquidGlassSurface(
+                shape = RoundedCornerShape(18.dp),
+                cornerRadiusDp = 18.dp,
+                strongBlur = false,
+                tintAlpha = 0.56f,
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -106,15 +107,18 @@ fun MemoryScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Switch(checked = state.learningsEnabled, onCheckedChange = { vm.setLearningsEnabled(it) })
+                    LiquidGlassToggle(checked = state.learningsEnabled, onCheckedChange = { vm.setLearningsEnabled(it) })
                 }
             }
 
-            // M3/M13 — commitments used to be invisible here: the user couldn't see why
-            // the companion kept reminding, nor stop it. Pending ones get a Done control.
             if (state.commitments.isNotEmpty()) {
                 Text("REMINDERS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
-                Surface(shape = RoundedCornerShape(14.dp), tonalElevation = 1.dp) {
+                LiquidGlassSurface(
+                    shape = RoundedCornerShape(18.dp),
+                    cornerRadiusDp = 18.dp,
+                    strongBlur = false,
+                    tintAlpha = 0.56f,
+                ) {
                     Column {
                         state.commitments.forEachIndexed { index, c ->
                             CommitmentRowItem(c, onDone = { vm.dismissCommitment(c.id) })
@@ -133,11 +137,8 @@ fun MemoryScreen(
                 }
             }
 
-            // Assistant memory, grouped exactly as the model receives it. The old single
-            // "REMEMBERED" list showed facts, past-chat summaries and task outcomes as one
-            // undifferentiated pile — which is also how the model used to be handed them.
             MemorySection("ABOUT YOU", state.assistant.facts, vm)
-            MemorySection("HOW YOU WANT AURA TO BEHAVE", state.assistant.preferences, vm)
+            MemorySection("HOW YOU WANT THAKUR OS TO BEHAVE", state.assistant.preferences, vm)
             MemorySection("HOW YOU SPEAK", state.assistant.style, vm)
             MemorySection("PAST CONVERSATIONS", state.assistant.episodes, vm)
             MemorySection("TASK LOG · ONLY WHEN ASKED", state.assistant.other, vm)
@@ -150,9 +151,9 @@ fun MemoryScreen(
                 )
             }
 
-            Button(
+            LiquidGlassButton(
                 onClick = { vm.clearAll() },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                destructive = true,
                 modifier = Modifier.fillMaxWidth(),
             ) { Text("Clear all memory") }
 
@@ -168,7 +169,12 @@ fun MemoryScreen(
 @Composable
 private fun AppLessonsCard(app: AppLessonsUi, vm: MemoryViewModel) {
     var expanded by rememberSaveable(app.appPackage) { mutableStateOf(false) }
-    Surface(shape = RoundedCornerShape(14.dp), tonalElevation = 1.dp) {
+    LiquidGlassSurface(
+        shape = RoundedCornerShape(18.dp),
+        cornerRadiusDp = 18.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+    ) {
         Column {
             Row(
                 modifier = Modifier
@@ -220,9 +226,11 @@ private fun AppLessonsCard(app: AppLessonsUi, vm: MemoryViewModel) {
                         onDelete = { vm.deleteFact(f.appPackage, f.kind, f.text) },
                     )
                 }
-                TextButton(
+                LiquidGlassButton(
                     onClick = { vm.forgetApp(app.appPackage) },
-                    modifier = Modifier.padding(horizontal = 8.dp),
+                    destructive = true,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 ) { Text("Forget this app") }
             }
         }
@@ -243,7 +251,11 @@ private fun LessonRow(title: String, subtitle: String, onDelete: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        TextButton(onClick = onDelete) { Text("Delete") }
+        LiquidGlassButton(
+            onClick = onDelete,
+            destructive = true,
+            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+        ) { Text("Delete") }
     }
 }
 
@@ -266,7 +278,11 @@ private fun CommitmentRowItem(c: Commitment, onDone: () -> Unit) {
             )
         }
         if (!c.done) {
-            TextButton(onClick = onDone) { Text("Done") }
+            LiquidGlassButton(
+                onClick = onDone,
+                accentGlow = LiquidPalette.SilkCyan,
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+            ) { Text("Done") }
         }
     }
 }
@@ -292,7 +308,12 @@ private fun ProfileCard(profile: UserProfile, vm: MemoryViewModel) {
     val dirty = name != profile.name.orEmpty() || languages != profile.languages.joinToString(", ")
 
     Text("YOU", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
-    Surface(shape = RoundedCornerShape(14.dp), tonalElevation = 1.dp) {
+    LiquidGlassSurface(
+        shape = RoundedCornerShape(18.dp),
+        cornerRadiusDp = 18.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+    ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -300,7 +321,7 @@ private fun ProfileCard(profile: UserProfile, vm: MemoryViewModel) {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("What AURA calls you") },
+                label = { Text("What THAKUR OS calls you") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -309,20 +330,30 @@ private fun ProfileCard(profile: UserProfile, vm: MemoryViewModel) {
                 onValueChange = { languages = it },
                 label = { Text("Languages you know") },
                 supportingText = {
-                    Text("Comma-separated, best first. AURA speaks only these, and opens in the first one.")
+                    Text("Comma-separated, best first. THAKUR OS speaks only these, and opens in the first one.")
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
             if (dirty) {
-                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                    TextButton(onClick = {
-                        name = profile.name.orEmpty()
-                        languages = profile.languages.joinToString(", ")
-                    }) { Text("Cancel") }
-                    TextButton(onClick = {
-                        vm.setName(name)
-                        vm.setLanguages(languages)
-                    }) { Text("Save") }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    LiquidGlassButton(
+                        onClick = {
+                            name = profile.name.orEmpty()
+                            languages = profile.languages.joinToString(", ")
+                        },
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                    ) { Text("Cancel") }
+                    LiquidGlassButton(
+                        onClick = {
+                            vm.setName(name)
+                            vm.setLanguages(languages)
+                        },
+                        accentGlow = LiquidPalette.SilkCyan,
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                    ) { Text("Save") }
                 }
             }
         }
@@ -334,7 +365,12 @@ private fun ProfileCard(profile: UserProfile, vm: MemoryViewModel) {
 private fun MemorySection(title: String, entries: List<MemoryEntry>, vm: MemoryViewModel) {
     if (entries.isEmpty()) return
     Text(title, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
-    Surface(shape = RoundedCornerShape(14.dp), tonalElevation = 1.dp) {
+    LiquidGlassSurface(
+        shape = RoundedCornerShape(18.dp),
+        cornerRadiusDp = 18.dp,
+        strongBlur = false,
+        tintAlpha = 0.56f,
+    ) {
         Column {
             entries.forEachIndexed { index, entry ->
                 MemoryRowItem(
@@ -384,7 +420,20 @@ private fun MemoryRowItem(entry: MemoryEntry, onTogglePin: () -> Unit, onDelete:
                 }
             }
         }
-        TextButton(onClick = onTogglePin) { Text(if (entry.pinned) "Unpin" else "Pin") }
-        TextButton(onClick = onDelete) { Text("Delete") }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(end = 10.dp),
+        ) {
+            LiquidGlassButton(
+                onClick = onTogglePin,
+                accentGlow = if (entry.pinned) LiquidPalette.SilkCyan else null,
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+            ) { Text(if (entry.pinned) "Unpin" else "Pin") }
+            LiquidGlassButton(
+                onClick = onDelete,
+                destructive = true,
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+            ) { Text("Delete") }
+        }
     }
 }

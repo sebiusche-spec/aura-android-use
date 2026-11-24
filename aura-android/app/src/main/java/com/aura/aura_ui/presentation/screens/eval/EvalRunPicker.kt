@@ -96,7 +96,7 @@ fun EvalRunPicker(
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SuiteChip(
-                    label = "AURA suite · $auraCount",
+                    label = "THAKUR OS suite · $auraCount",
                     selected = !androidWorld,
                     onClick = { androidWorld = false },
                 )

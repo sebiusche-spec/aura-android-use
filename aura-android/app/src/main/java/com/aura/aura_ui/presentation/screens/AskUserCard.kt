@@ -111,7 +111,7 @@ private fun AskUserCardBody(
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(
-                text = "AURA needs a decision",
+                text = "THAKUR OS needs a decision",
                 color = colors.textSecondary,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,

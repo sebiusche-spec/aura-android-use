@@ -57,7 +57,7 @@ internal fun LazyListScope.storyItems(
                     Text("From ${r.source}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = scheme.textPrimary)
                     Text(firstSentences(r.note, 2), style = MaterialTheme.typography.bodyMedium, color = scheme.textSecondary)
                 } else {
-                    Text("Looked for official help for this — nothing useful came up, so AURA worked it out on screen.", style = MaterialTheme.typography.bodyMedium, color = scheme.textSecondary)
+                    Text("Looked for official help for this — nothing useful came up, so THAKUR OS worked it out on screen.", style = MaterialTheme.typography.bodyMedium, color = scheme.textSecondary)
                 }
             }
         }
@@ -86,7 +86,7 @@ internal fun LazyListScope.storyItems(
     finalWords(s)?.let { words ->
         item(key = "final") {
             StoryCard(scheme) {
-                Label("AURA SAID", scheme)
+                Label("THAKUR OS SAID", scheme)
                 Text(words, style = MaterialTheme.typography.bodyLarge, color = scheme.textPrimary)
             }
         }
@@ -202,7 +202,7 @@ private fun SaidRow(u: Utterance, scheme: MonoScheme) {
             modifier = Modifier.fillMaxWidth(0.85f),
         ) {
             Column(Modifier.padding(12.dp)) {
-                Text(if (you) "You" else "AURA", style = MaterialTheme.typography.labelSmall, color = if (you) scheme.textSecondary else Mono.TextOnInk.copy(alpha = 0.7f))
+                Text(if (you) "You" else "THAKUR OS", style = MaterialTheme.typography.labelSmall, color = if (you) scheme.textSecondary else Mono.TextOnInk.copy(alpha = 0.7f))
                 Text(u.text, style = MaterialTheme.typography.bodyMedium, color = if (you) scheme.textPrimary else Mono.TextOnInk)
             }
         }

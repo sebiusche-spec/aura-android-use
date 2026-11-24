@@ -21,6 +21,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,8 +48,10 @@ import androidx.lifecycle.lifecycleScope
 import com.aura.aura_ui.accessibility.AuraAccessibilityService
 import com.aura.aura_ui.agent.mcpbridge.client.McpOAuthCoordinator
 import com.aura.aura_ui.data.preferences.OnboardingPreferences
+import com.aura.aura_ui.data.preferences.ThakurSecurityStore
 import com.aura.aura_ui.data.preferences.ThemeManager
 import com.aura.aura_ui.mcp.bridge.AppBrowserBridge
+import com.aura.aura_ui.presentation.components.LuxurySplashOverlay
 import com.aura.aura_ui.presentation.navigation.AuraAppShell
 import com.aura.aura_ui.presentation.navigation.AuraRoutes
 import com.aura.aura_ui.presentation.screens.*
@@ -227,6 +230,12 @@ class MainActivity : FragmentActivity() {
     // Track if we're only here to request screen capture (finish after result)
     private var pendingScreenCaptureRequest = false
 
+    // Ensures LuxurySplashOverlay plays once on cold/initial Activity entry (<= 2.5s total)
+    private var splashConsumed = false
+
+    // Tracks whether SecuredAccessScreen has been satisfied for this Activity session
+    private var securedUnlockedForSession = false
+
     /**
      * This Activity uses a translucent, full-screen window. While it is being
      * backgrounded, Android can briefly leave that window in the input channel
@@ -247,23 +256,17 @@ class MainActivity : FragmentActivity() {
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Splash (Theme.Aura.Splash): mono field + ink badge; must install before super.
+        // Immediate hand-off from Android 12+ black launch frame to Compose LuxurySplashOverlay.
         val splashScreen = installSplashScreen()
-        
-        var keepSplashScreen = true
-        splashScreen.setKeepOnScreenCondition { keepSplashScreen }
-        
-        lifecycleScope.launch {
-            delay(750) // 0.75 seconds delay
-            keepSplashScreen = false
-        }
+        splashScreen.setKeepOnScreenCondition { false }
 
         super.onCreate(savedInstanceState)
 
-        Log.d(TAG, "onCreate: Starting AURA UI")
+        Log.d(TAG, "onCreate: Starting THAKUR OS UI")
         
-        // Initialize ThemeManager with saved preferences
+        // Initialize ThemeManager and security preferences before any screen/service reads them
         ThemeManager.initialize(this)
+        ThakurSecurityStore.hydrate(this)
         
         // Initialize onboarding preferences
         OnboardingPreferences.init(this)
@@ -359,14 +362,27 @@ class MainActivity : FragmentActivity() {
     private fun showOnboarding() {
         enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        val playSplash = !splashConsumed
         setContent {
-            AuraUITheme {
-                OnboardingScreen(
-                    onDone = {
-                        OnboardingPreferences.completeOnboarding()
-                        showAppShell()
-                    },
-                )
+            var showLuxurySplash by remember { mutableStateOf(playSplash) }
+            AuraUITheme(darkTheme = true) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    OnboardingScreen(
+                        onDone = {
+                            splashConsumed = true
+                            OnboardingPreferences.completeOnboarding()
+                            showAppShell()
+                        },
+                    )
+                    if (showLuxurySplash) {
+                        LuxurySplashOverlay(
+                            onFinished = {
+                                splashConsumed = true
+                                showLuxurySplash = false
+                            },
+                        )
+                    }
+                }
             }
         }
     }
@@ -555,21 +571,47 @@ class MainActivity : FragmentActivity() {
     private fun showAppShell(startDestination: String = AuraRoutes.HOME) {
         enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        val playSplash = !splashConsumed && startDestination == AuraRoutes.HOME
+        val requireSecuredAccess = ThakurSecurityStore.isSecuredAccessEnabled(this) &&
+            !securedUnlockedForSession &&
+            startDestination != AuraRoutes.EVAL_SUITE
         setContent {
-            AuraUITheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background,
-                ) {
-                    AuraAppShell(
-                        onStartChat = { seed -> openChatOverlay(seed) },
-                        onOpenBrowser = { openAuraBrowser() },
-                        onRequestScreenCapture = {
-                            pendingScreenCaptureRequest = false
-                            requestScreenCapturePermission()
-                        },
-                        startDestination = startDestination,
-                    )
+            var showLuxurySplash by remember { mutableStateOf(playSplash) }
+            var needsSecuredGate by remember { mutableStateOf(requireSecuredAccess) }
+            AuraUITheme(darkTheme = true) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (needsSecuredGate) {
+                        SecuredAccessScreen(
+                            onUnlocked = {
+                                securedUnlockedForSession = true
+                                needsSecuredGate = false
+                            },
+                            onBack = { moveTaskToBack(true) },
+                        )
+                    } else {
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            color = MaterialTheme.colorScheme.background,
+                        ) {
+                            AuraAppShell(
+                                onStartChat = { seed -> openChatOverlay(seed) },
+                                onOpenBrowser = { openAuraBrowser() },
+                                onRequestScreenCapture = {
+                                    pendingScreenCaptureRequest = false
+                                    requestScreenCapturePermission()
+                                },
+                                startDestination = startDestination,
+                            )
+                        }
+                    }
+                    if (showLuxurySplash) {
+                        LuxurySplashOverlay(
+                            onFinished = {
+                                splashConsumed = true
+                                showLuxurySplash = false
+                            },
+                        )
+                    }
                 }
             }
         }

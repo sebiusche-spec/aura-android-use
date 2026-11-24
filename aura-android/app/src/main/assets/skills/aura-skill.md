@@ -1,5 +1,5 @@
 ---
-name: Aura Skill
+name: THAKUR OS Skill
 description: Core operating doctrine — research a task before acting, keep the world state fresh, and never lose context mid-run
 whenToUse: before starting any multi-step, unfamiliar, or error-prone automation; or after two consecutive failed/blocked actions
 ---

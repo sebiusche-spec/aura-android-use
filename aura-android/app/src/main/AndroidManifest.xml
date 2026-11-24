@@ -286,7 +286,7 @@
              settings (the enable screen is the consent boundary). -->
         <service
             android:name=".ime.AuraKeyboardService"
-            android:label="AURA Keyboard"
+            android:label="THAKUR OS Keyboard"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_INPUT_METHOD">

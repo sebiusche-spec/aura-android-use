@@ -103,9 +103,9 @@ class StubWakeWordDetector : WakeWordDetector {
     override val isListening: StateFlow<Boolean> = _isListening.asStateFlow()
 
     override val availableKeywords: List<String> = listOf(
-        "Hey AURA",
-        "OK AURA",
-        "AURA"
+        "Wake up THAKUR OS",
+        "Hey THAKUR OS",
+        "THAKUR OS"
     )
 
     private var onWakeWordCallback: ((String) -> Unit)? = null
@@ -143,7 +143,7 @@ class StubWakeWordDetector : WakeWordDetector {
      * Simulate wake word detection (for testing).
      * Call this to trigger the callback as if a wake word was detected.
      */
-    fun simulateWakeWord(keyword: String = "Hey AURA") {
+    fun simulateWakeWord(keyword: String = "Wake up THAKUR OS") {
         Log.i(TAG, "🔊 Simulated wake word: $keyword")
         onWakeWordCallback?.invoke(keyword)
     }

@@ -555,6 +555,12 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     // recomposes (requests focus / shows keyboard) when this changes.
     private val inputActiveState = mutableStateOf(false)
 
+    // Secret Code gate when THAKUR OS Security Lock is enabled.
+    private val isSecretLockedState = mutableStateOf(false)
+    private val secretErrorState = mutableStateOf<String?>(null)
+    private var pendingWakeAutoStartAfterUnlock = false
+    private var pendingTaskAfterUnlock: String? = null
+
     /**
      * Toggle the overlay window's input focusability via [WindowManager.updateViewLayout].
      * The overlay is [WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE] by default (see
@@ -1170,6 +1176,10 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                 conversationViewModel.updatePhase(ConversationPhase.IDLE)
                 return@launch
             }
+            if (isSecretLockedState.value) {
+                verifySecretAttempt(text)
+                return@launch
+            }
             conversationViewModel.addRecentCommand(text)
             com.aura.aura_ui.services.AgentStatusRegistry.setHeard(text)
             // Run on *this* job, not via runOnDeviceAgent() — we are already inside
@@ -1177,6 +1187,30 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             // strand the overlay on THINKING. One continuous job also means onDismiss's
             // single agentRunJob.cancel() aborts transcription and the run as a unit.
             executeAgent(text, source = "voice")
+        }
+    }
+
+    /** Check spoken or entered secret against ThakurSecurityStore before unlocking assistant. */
+    private fun verifySecretAttempt(attempt: String) {
+        if (attempt.isBlank()) return
+        if (com.aura.aura_ui.data.preferences.ThakurSecurityStore.verifySecret(this, attempt)) {
+            isSecretLockedState.value = false
+            secretErrorState.value = null
+            deactivateTextInput()
+            val queuedTask = pendingTaskAfterUnlock
+            pendingTaskAfterUnlock = null
+            val autoListen = pendingWakeAutoStartAfterUnlock
+            pendingWakeAutoStartAfterUnlock = false
+            when {
+                queuedTask != null -> announceThenRun(queuedTask)
+                liveActive() -> companionLiveController?.greet()
+                useGeminiLive && companionConfigured() -> initializeVoiceController()
+                autoListen -> if (!startCascadeListening()) voiceCaptureController?.startCapture()
+                else -> greetLocally()
+            }
+        } else {
+            secretErrorState.value = "Wrong secret, try again"
+            conversationViewModel.updatePhase(ConversationPhase.IDLE)
         }
     }
 
@@ -1418,10 +1452,15 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                     Log.i(TAG, "Run task requested externally: \"$task\"")
                     harnessTaskText = task
                     episodeWriter.excludeCurrentConversation()
-                    // Show the overlay first: the caller asked for the real user experience, and
-                    // half of that is being able to watch it and hit pause.
-                    showOverlay()
-                    announceThenRun(task)
+                    if (com.aura.aura_ui.data.preferences.ThakurSecurityStore.isSecretLockActive(this)) {
+                        pendingTaskAfterUnlock = task
+                        showOverlay()
+                    } else {
+                        // Show the overlay first: the caller asked for the real user experience, and
+                        // half of that is being able to watch it and hit pause.
+                        showOverlay()
+                        announceThenRun(task)
+                    }
                 }
             }
             ACTION_ATTACH_RUN_SURFACE -> Unit
@@ -1551,6 +1590,11 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         }
 
         try {
+            // Check Secret Code lock every time the overlay opens.
+            val locked = com.aura.aura_ui.data.preferences.ThakurSecurityStore.isSecretLockActive(this)
+            isSecretLockedState.value = locked
+            secretErrorState.value = null
+
             // Move lifecycle to STARTED before creating the view
             lifecycleRegistry.currentState = Lifecycle.State.STARTED
 
@@ -1660,6 +1704,16 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         // Show the overlay first
         showOverlay()
 
+        if (isSecretLockedState.value) {
+            pendingWakeAutoStartAfterUnlock = true
+            if (localStt.isModelReady() && localStt.hasMicPermission()) {
+                startCascadeListening()
+            } else {
+                voiceCaptureController?.startCapture()
+            }
+            return
+        }
+
         // Only auto-start for classic VoiceCaptureController (STT/TTS mode).
         // Gemini Live is always-on once the user presses mic — never auto-start.
         if (liveActive()) {
@@ -1746,6 +1800,10 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
 
             _isOverlayVisible.value = false
             _isMinimized.value = false
+            isSecretLockedState.value = false
+            secretErrorState.value = null
+            pendingWakeAutoStartAfterUnlock = false
+            pendingTaskAfterUnlock = null
             updateNotification(false)
 
             Log.i(TAG, "Overlay hidden")
@@ -2066,7 +2124,7 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         )
 
         val indeterminate = stepTotal <= 0
-        val title = if (_workingGoal.isNotEmpty()) "AURA \u2014 $_workingGoal" else "AURA"
+        val title = if (_workingGoal.isNotEmpty()) "THAKUR OS \u2014 $_workingGoal" else "THAKUR OS"
 
         // The overlay's automation pill is live \u2014 the AssistantForegroundService
         // status chip yields (ChipVisibilityPolicy) so the notch shows ONE pill.
@@ -2205,7 +2263,7 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     @Suppress("NewApi")
     private fun promoteIfSupported(
         notification: Notification,
-        chipText: String = "AURA",
+        chipText: String = "THAKUR OS",
         max: Int = 0,
         progress: Int = 0,
         indeterminate: Boolean = false
@@ -2254,7 +2312,7 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
 
             // Build notification with direct API calls
             val builder = Notification.Builder(this, CHANNEL_ID_WORKING)
-                .setContentTitle(notification.extras.getString(Notification.EXTRA_TITLE) ?: "AURA")
+                .setContentTitle(notification.extras.getString(Notification.EXTRA_TITLE) ?: "THAKUR OS")
                 .setContentText(notification.extras.getString(Notification.EXTRA_TEXT) ?: "")
                 .setSmallIcon(R.drawable.ic_notification)
                 .setOngoing(true)
@@ -2614,6 +2672,8 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             agentSteps = agentSteps,
             resumeOffer = conversationState.resumeOffer,
             isScreenSharing = isSharingScreen,
+            isSecretLocked = isSecretLockedState.value,
+            secretError = secretErrorState.value,
         )
 
         // Build 3: when the overlay is at rest (no messages, idle), check for an interrupted run
@@ -2773,6 +2833,20 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             },
             onMessageLike = { msg -> Log.i(TAG, "like ${msg.id}") },
             onMessageDislike = { msg -> Log.i(TAG, "dislike ${msg.id}") },
+            onSubmitSecret = { attempt -> verifySecretAttempt(attempt) },
+            onSpeakSecret = {
+                val phase = conversationState.conversationState
+                when {
+                    sttActive -> stopListeningAndRun()
+                    phase == ConversationPhase.LISTENING -> voiceCaptureController?.stopCapture()
+                    else -> {
+                        secretErrorState.value = null
+                        if (!startCascadeListening()) {
+                            voiceCaptureController?.startCapture()
+                        }
+                    }
+                }
+            },
         )
 
         VoiceAssistantOverlay(
@@ -2885,7 +2959,9 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                 // Discover server URL
                 serverUrl = discoverServerUrl()
 
-                if (useGeminiLive && companionConfigured()) {
+                if (useGeminiLive && companionConfigured() && !isSecretLockedState.value) {
+                    voiceCaptureController?.cleanup()
+                    voiceCaptureController = null
                     // ── BYOK Gemini Live (direct, no backend) ─────────────────────
                     // CompanionLiveController owns ALL voice I/O directly with the user's key;
                     // drive_phone runs in-process through the gate. No server, no gesture pipe.
@@ -2930,6 +3006,10 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                         audioAmplitude.floatValue = amplitude
                     },
                     onLocalTranscript = { text ->
+                        if (isSecretLockedState.value) {
+                            verifySecretAttempt(text)
+                            return@VoiceCaptureController
+                        }
                         if (!answerPendingQuestion(text)) {
                             conversationViewModel.addRecentCommand(text)
                             if (isAgentConfigured()) {
@@ -2957,8 +3037,8 @@ class AuraOverlayService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                     }
                 }
 
-                // Fresh session (wake word OR manual open): greet and open the mic, as Live does.
-                greetLocally()
+                // Fresh session (wake word OR manual open): greet and open the mic, unless secret-locked.
+                if (!isSecretLockedState.value) greetLocally()
             } catch (e: Exception) {
                 Log.e(TAG, "Error initializing voice controller", e)
             }

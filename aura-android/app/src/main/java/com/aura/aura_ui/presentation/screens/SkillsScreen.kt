@@ -105,7 +105,7 @@ fun SkillsScreen(
                     )
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        "Write the steps once — AURA follows them on demand.",
+                        "Write the steps once — THAKUR OS follows them on demand.",
                         style = MaterialTheme.typography.bodySmall,
                         color = cs.onCharDim,
                     )
@@ -123,7 +123,7 @@ fun SkillsScreen(
         MonoSectionLabel("Your skills · ${state.skills.size}", scheme)
         if (state.skills.isEmpty()) {
             Text(
-                "Nothing yet. Teach AURA its first skill above.",
+                "Nothing yet. Teach THAKUR OS its first skill above.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = scheme.textSecondary,
                 modifier = Modifier.padding(start = 8.dp),
@@ -235,7 +235,7 @@ private fun SkillPlaybook(skill: Skill, cs: com.aura.aura_ui.ui.theme.CapsuleSch
         if (skill.whenToUse.isNotBlank()) {
             Spacer(Modifier.height(14.dp))
             Text(
-                "WHEN AURA USES IT",
+                "WHEN THAKUR OS USES IT",
                 style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.5.sp),
                 color = cs.sub,
             )
@@ -303,7 +303,7 @@ private fun SkillEditor(
         // SK2 — user skills are trusted, every-run prompt content; pasted internet
         // text gets that authority too. Say so where it's typed.
         Text(
-            "Skills steer AURA on every run. Only save steps you wrote or trust — " +
+            "Skills steer THAKUR OS on every run. Only save steps you wrote or trust — " +
                 "don't paste instructions from sources you don't know.",
             style = MaterialTheme.typography.bodySmall,
             color = cs.sub,

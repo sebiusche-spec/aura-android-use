@@ -77,7 +77,7 @@ class AgentLaneEpisodeWriter(
         fun transcriptOrNull(messages: List<ConversationMessage>): String? {
             val settled = messages.filter { !it.isPartial && !it.isStreaming && it.text.isNotBlank() }
             if (settled.count { it.isUser } < MIN_USER_TURNS) return null
-            return settled.joinToString("\n") { "${if (it.isUser) "User" else "AURA"}: ${it.text.trim()}" }
+            return settled.joinToString("\n") { "${if (it.isUser) "User" else "THAKUR OS"}: ${it.text.trim()}" }
         }
     }
 }

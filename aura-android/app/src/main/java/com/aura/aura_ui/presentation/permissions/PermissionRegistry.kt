@@ -79,7 +79,7 @@ object PermissionRegistry {
         AuraPermission(
             id = "accessibility",
             title = "Accessibility service",
-            why = "See the screen and perform taps, swipes and typing for you. AURA reads on-screen content ONLY while running your tasks; banking and payment apps are always blocked.",
+            why = "See the screen and perform taps, swipes and typing for you. THAKUR OS reads on-screen content ONLY while running your tasks; banking and payment apps are always blocked.",
             tier = 1,
             kind = PermissionKind.SPECIAL,
             isGranted = { ctx ->
@@ -95,7 +95,7 @@ object PermissionRegistry {
         AuraPermission(
             id = "notifications",
             title = "Notifications",
-            why = "Keep you posted on task progress while AURA works in the background.",
+            why = "Keep you posted on task progress while THAKUR OS works in the background.",
             tier = 1,
             kind = PermissionKind.RUNTIME,
             runtimePermissions = if (Build.VERSION.SDK_INT >= 33) {
@@ -204,8 +204,8 @@ object PermissionRegistry {
         ),
         AuraPermission(
             id = "aura_keyboard",
-            title = "AURA Keyboard",
-            why = "Required so AURA can type in EVERY app. Many popular apps (ride, delivery, food, banking-adjacent and game apps like Rapido, Uber, Swiggy — built on React Native or Flutter) don't use standard Android text fields, so the normal typing path silently fails there. AURA's keyboard is the only way to enter text in those apps. It has no visible keyboard and never reads what you type — AURA switches to it ONLY to enter your text, then switches straight back to your usual keyboard.",
+            title = "THAKUR OS Keyboard",
+            why = "Required so THAKUR OS can type in EVERY app. Many popular apps (ride, delivery, food, banking-adjacent and game apps like Rapido, Uber, Swiggy — built on React Native or Flutter) don't use standard Android text fields, so the normal typing path silently fails there. THAKUR OS's keyboard is the only way to enter text in those apps. It has no visible keyboard and never reads what you type — THAKUR OS switches to it ONLY to enter your text, then switches straight back to your usual keyboard.",
             tier = 1,
             kind = PermissionKind.SPECIAL,
             isGranted = { ctx ->

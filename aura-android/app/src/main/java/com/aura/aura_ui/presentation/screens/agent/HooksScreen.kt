@@ -66,7 +66,7 @@ fun HooksScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(scheme.canvas)
+            .background(androidx.compose.ui.graphics.Color.Transparent)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp),
     ) {

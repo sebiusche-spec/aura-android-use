@@ -22,7 +22,7 @@ fun AiDisclaimer(
 ) {
     val scheme = rememberMonoScheme()
     Text(
-        text = "AURA is powered by AI and may occasionally make mistakes. Please review important actions.",
+        text = "THAKUR OS is powered by AI and may occasionally make mistakes. Please review important actions.",
         style = MaterialTheme.typography.labelSmall.copy(fontSize = if (smallText) 10.sp else 11.sp),
         color = scheme.textSecondary,
         textAlign = TextAlign.Center,

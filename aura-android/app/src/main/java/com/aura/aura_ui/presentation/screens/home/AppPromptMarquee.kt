@@ -180,7 +180,7 @@ internal val FALLBACK_PROMPTS = listOf(
 )
 
 private val INITIAL_MARQUEE_ITEMS = FALLBACK_PROMPTS.map {
-    MarqueeItem(label = "AURA", prompt = it, icon = null)
+    MarqueeItem(label = "THAKUR OS", prompt = it, icon = null)
 }
 
 /** A resolved marquee entry. [icon] is null while its package icon is loading. */
@@ -268,7 +268,7 @@ private suspend fun resolveMarqueeItems(context: Context): List<MarqueeItem> =
             MarqueeItem(label = app.label, prompt = app.prompt, icon = null, packageName = pkg)
         }
         resolved.ifEmpty {
-            FALLBACK_PROMPTS.map { MarqueeItem(label = "AURA", prompt = it, icon = null) }
+            FALLBACK_PROMPTS.map { MarqueeItem(label = "THAKUR OS", prompt = it, icon = null) }
         }
     }
 

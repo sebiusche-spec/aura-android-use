@@ -50,7 +50,7 @@ object LiveUpdateNotificationHelper {
      * reason the v1 → v2 rename exists above.
      */
     private const val CHANNEL_ID_QUIET = "aura_live_update_quiet_v3"
-    private const val CHANNEL_NAME = "AURA Status"
+    private const val CHANNEL_NAME = "THAKUR OS Status"
     private const val NOTIFICATION_ID = 9_001
 
     /** Mono's only accent (`ui/theme/Mono.kt`) — semantic attention, never decoration. */
@@ -131,10 +131,10 @@ object LiveUpdateNotificationHelper {
             nm.createNotificationChannel(
                 NotificationChannel(
                     SILENT_CHANNEL_ID,
-                    "AURA background (silent)",
+                    "THAKUR OS background (silent)",
                     NotificationManager.IMPORTANCE_MIN,
                 ).apply {
-                    description = "Invisible placeholder while AURA waits in the background"
+                    description = "Invisible placeholder while THAKUR OS waits in the background"
                     setShowBadge(false)
                     enableVibration(false)
                     enableLights(false)
@@ -210,7 +210,7 @@ object LiveUpdateNotificationHelper {
         val openAction = Notification.Action.Builder(null, "Open", openPi).build()
 
         val builder = Notification.Builder(context, CHANNEL_ID)
-            .setContentTitle("AURA")
+            .setContentTitle("THAKUR OS")
             .setContentText(verb)
             .setSmallIcon(R.drawable.ic_notification)
             .setOngoing(true)
@@ -243,7 +243,7 @@ object LiveUpdateNotificationHelper {
     private fun buildCompatNotification(context: Context, verb: String): Notification {
         return NotificationCompat.Builder(context, activeChannelId)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("AURA")
+            .setContentTitle("THAKUR OS")
             .setContentText(verb)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
@@ -278,7 +278,7 @@ object LiveUpdateNotificationHelper {
                 NotificationManager.IMPORTANCE_LOW
             },
         ).apply {
-            description = "AURA connection and task status (status-bar chip on Android 16+)"
+            description = "THAKUR OS connection and task status (status-bar chip on Android 16+)"
             setShowBadge(false)
             enableVibration(false)
             enableLights(false)

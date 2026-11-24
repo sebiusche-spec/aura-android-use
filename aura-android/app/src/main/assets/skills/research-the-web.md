@@ -3,7 +3,7 @@ name: Research Before Acting
 description: Look up how to do a task — search route, query shape, which sources to trust, and how to turn results into plan steps
 whenToUse: at the START of any multi-step goal in an app whose exact flow you are not certain of, and again mid-task whenever you are stuck, a screen is not what you expected, or a better route may exist
 ---
-1. THE FIRST LOOK IS ALREADY DONE. At the start of every run AURA searches the official help
+1. THE FIRST LOOK IS ALREADY DONE. At the start of every run THAKUR OS searches the official help
    for this task on this phone by itself. If it found something, it appears in your run
    ledger as research notes, usually a turn or two in. Read them before planning. If none
    arrive, carry on from the screen; do not wait for them.

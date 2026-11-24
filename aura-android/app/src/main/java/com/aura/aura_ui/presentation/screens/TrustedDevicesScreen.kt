@@ -18,6 +18,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.aura.aura_ui.mcp.AppTrustedClients
 import com.aura.aura_ui.presentation.components.AuraScreenScaffold
+import com.aura.aura_ui.presentation.components.LiquidGlassButton
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
+import com.aura.aura_ui.presentation.components.LiquidGlassToggle
+import com.aura.aura_ui.presentation.components.LiquidPalette
 import com.aura.aura_ui.ui.theme.Capsule
 import com.aura.mcp.bridge.TrustedClient
 import com.aura.mcp.server.Toolset
@@ -57,10 +61,11 @@ fun TrustedDevicesScreen(
             )
 
             if (clients.isEmpty()) {
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 1.dp,
+                LiquidGlassSurface(
+                    shape = RoundedCornerShape(18.dp),
+                    cornerRadiusDp = 18.dp,
+                    strongBlur = false,
+                    tintAlpha = 0.56f,
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(20.dp),
@@ -82,10 +87,11 @@ fun TrustedDevicesScreen(
                     }
                 }
             } else {
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 1.dp,
+                LiquidGlassSurface(
+                    shape = RoundedCornerShape(18.dp),
+                    cornerRadiusDp = 18.dp,
+                    strongBlur = false,
+                    tintAlpha = 0.56f,
                 ) {
                     Column {
                         clients.sortedByDescending { it.lastConnectedAt }.forEachIndexed { i, client ->
@@ -102,13 +108,12 @@ fun TrustedDevicesScreen(
                     }
                 }
 
-                OutlinedButton(
+                LiquidGlassButton(
                     onClick = { confirmRevokeAll = true },
+                    destructive = true,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = cs.accent),
                 ) {
                     Icon(Icons.Filled.LinkOff, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
                     Text("Revoke all")
                 }
             }
@@ -128,13 +133,20 @@ fun TrustedDevicesScreen(
                 )
             },
             confirmButton = {
-                TextButton(onClick = {
-                    confirmRevokeAll = false
-                    store.revokeAll()
-                }) { Text("Revoke all") }
+                LiquidGlassButton(
+                    onClick = {
+                        confirmRevokeAll = false
+                        store.revokeAll()
+                    },
+                    destructive = true,
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                ) { Text("Revoke all") }
             },
             dismissButton = {
-                TextButton(onClick = { confirmRevokeAll = false }) { Text("Cancel") }
+                LiquidGlassButton(
+                    onClick = { confirmRevokeAll = false },
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                ) { Text("Cancel") }
             },
         )
     }
@@ -199,9 +211,10 @@ private fun TrustedDeviceRow(
                 color = cs.sub,
             )
         }
-        TextButton(
+        LiquidGlassButton(
             onClick = { confirm = true },
-            colors = ButtonDefaults.textButtonColors(contentColor = cs.accent),
+            destructive = true,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 7.dp),
         ) {
             Text("Revoke", style = MaterialTheme.typography.labelMedium)
         }
@@ -217,13 +230,20 @@ private fun TrustedDeviceRow(
                 )
             },
             confirmButton = {
-                TextButton(onClick = {
-                    confirm = false
-                    onRevoke()
-                }) { Text("Revoke") }
+                LiquidGlassButton(
+                    onClick = {
+                        confirm = false
+                        onRevoke()
+                    },
+                    destructive = true,
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                ) { Text("Revoke") }
             },
             dismissButton = {
-                TextButton(onClick = { confirm = false }) { Text("Cancel") }
+                LiquidGlassButton(
+                    onClick = { confirm = false },
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                ) { Text("Cancel") }
             },
         )
     }
@@ -238,11 +258,13 @@ private fun ToolsetSwitch(
     onToolsets: (Set<Toolset>) -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-        Switch(
+        LiquidGlassToggle(
             checked = toolset in enabled,
             onCheckedChange = { on -> onToolsets(if (on) enabled + toolset else enabled - toolset) },
         )

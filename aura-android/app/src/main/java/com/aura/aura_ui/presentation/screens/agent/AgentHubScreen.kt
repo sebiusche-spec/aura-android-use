@@ -62,7 +62,7 @@ fun AgentHubScreen(
 
     AuraScreenScaffold(
         title = "Agent",
-        subtitle = "How AURA thinks and acts",
+        subtitle = "How THAKUR OS thinks and acts",
         modifier = modifier,
     ) {
         Spacer(Modifier.height(6.dp))
@@ -108,7 +108,7 @@ fun AgentHubScreen(
                 }
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    "Which AI thinks for AURA — provider, API key and model, on your own key.",
+                    "Which AI thinks for THAKUR OS — provider, API key and model, on your own key.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = cs.onCharDim,
                 )
@@ -120,7 +120,7 @@ fun AgentHubScreen(
             MonoRow(
                 icon = Icons.Outlined.Construction,
                 title = "Tools",
-                subtitle = "Everything AURA can do on this device",
+                subtitle = "Everything THAKUR OS can do on this device",
                 onClick = onOpenTools,
             )
             MonoDivider()

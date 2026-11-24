@@ -103,7 +103,7 @@ fun AuraLogoButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     size: Dp = 48.dp,
-    contentDescription: String = "Aura",
+    contentDescription: String = "THAKUR OS",
 ) {
     val logo = ImageBitmap.imageResource(R.mipmap.ic_launcher_foreground)
 

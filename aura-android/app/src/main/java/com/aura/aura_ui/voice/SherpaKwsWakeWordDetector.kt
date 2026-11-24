@@ -8,12 +8,14 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.util.Log
 import androidx.core.content.ContextCompat
+import com.aura.aura_ui.data.preferences.ThakurSecurityStore
 import com.k2fsa.sherpa.onnx.FeatureConfig
 import com.k2fsa.sherpa.onnx.KeywordSpotter
 import com.k2fsa.sherpa.onnx.KeywordSpotterConfig
 import com.k2fsa.sherpa.onnx.OnlineModelConfig
 import com.k2fsa.sherpa.onnx.OnlineStream
 import com.k2fsa.sherpa.onnx.OnlineTransducerModelConfig
+import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -31,23 +33,9 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Free, fully-offline wake-word detection powered by sherpa-onnx keyword spotting
  * (Apache-2.0).
  *
- * How it works:
- * - The engine is a tiny streaming zipformer transducer ("open-vocabulary KWS"),
- *   so the wake phrase is just lines of BPE tokens in `assets/kws/keywords.txt` — no
- *   cloud console, no per-device `.ppn`, no access key.
- * - The only wake phrase is "Wake up AURA". This GigaSpeech model cannot hear the rare
- *   word "aura" after a short anchor like "hey" (~1/5 recall measured), so the phrase
- *   leans on the common two-word anchor "wake up"; the "aura" tail is caught by the
- *   ▁A/▁OR/▁OUR spellings (`WAKE UP ORAH` = `▁WA KE ▁UP ▁OR A H`). See keywords.txt.
- * - ONNX Runtime is statically linked inside `libsherpa-onnx-jni.so`, so this does
- *   NOT touch OmniParser's onnxruntime-android at runtime.
- *
- * Audio contract is identical to the old detector: 16 kHz mono 16-bit PCM from
- * [AudioRecord]. The only wire-level difference is that sherpa consumes normalized
- * `FloatArray` samples, so each PCM frame is divided by 32768 before being fed in.
- *
- * CRITICAL (unchanged): only ONE audio consumer can hold the mic at a time. Wake
- * word detection must [stop] before STT starts.
+ * Reads the active wake phrase from [ThakurSecurityStore.getWakeWord] on startup and
+ * whenever reloaded from Settings, deterministically tokenizing custom phrases against
+ * `assets/kws/tokens.txt` so edits apply immediately without app reinstall.
  */
 class SherpaKwsWakeWordDetector(
     private val context: Context,
@@ -64,8 +52,8 @@ class SherpaKwsWakeWordDetector(
     private val _isListening = MutableStateFlow(false)
     override val isListening: StateFlow<Boolean> = _isListening.asStateFlow()
 
-    // Display names only: getResult() returns the matched phrase itself (e.g. "WAKE UP ORAH").
-    override val availableKeywords: List<String> = listOf("Wake up AURA")
+    private val configuredWakeWord: String = ThakurSecurityStore.getWakeWord(context)
+    override val availableKeywords: List<String> = listOf(configuredWakeWord)
 
     private var onWakeWordCallback: ((String) -> Unit)? = null
     private var initError: Exception? = null
@@ -76,10 +64,44 @@ class SherpaKwsWakeWordDetector(
 
     private fun initializeSpotter() {
         try {
-            Log.i(TAG, "🔧 Initializing sherpa-onnx keyword spotter (assets/$ASSET_DIR)…")
-            // sherpa's own reference config for the gigaspeech-3.3M KWS model
-            // (modelType = "zipformer2"). We ship the int8 variants to keep the
-            // bundle ~5 MB; sherpa reads them straight from the APK's assets.
+            val phrase = configuredWakeWord
+            val isDefaultPhrase = phrase.equals(ThakurSecurityStore.DEFAULT_WAKE_WORD, ignoreCase = true)
+            val vocab = loadVocab()
+
+            if (!isDefaultPhrase) {
+                val customTokensLine = tokenizePhraseForKws(phrase, vocab)
+                if (customTokensLine != null) {
+                    val kwsDir = ensureKwsFilesOnDisk()
+                    val customKeywordsFile = File(kwsDir, "custom_keywords.txt")
+                    customKeywordsFile.writeText("$customTokensLine\n")
+                    validateKeywordLines(customKeywordsFile.readLines(), vocab, "custom_keywords.txt")
+
+                    val modelConfig = OnlineModelConfig(
+                        transducer = OnlineTransducerModelConfig(
+                            encoder = File(kwsDir, "encoder.int8.onnx").absolutePath,
+                            decoder = File(kwsDir, "decoder.int8.onnx").absolutePath,
+                            joiner = File(kwsDir, "joiner.int8.onnx").absolutePath,
+                        ),
+                        tokens = File(kwsDir, "tokens.txt").absolutePath,
+                        numThreads = 1,
+                        provider = "cpu",
+                        modelType = "zipformer2",
+                    )
+                    val config = KeywordSpotterConfig(
+                        featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = 80),
+                        modelConfig = modelConfig,
+                        keywordsFile = customKeywordsFile.absolutePath,
+                        keywordsScore = keywordsScore,
+                        keywordsThreshold = keywordsThreshold,
+                    )
+                    spotter = KeywordSpotter(assetManager = null, config = config)
+                    initError = null
+                    Log.i(TAG, "✅ sherpa-onnx initialized with custom wake phrase \"$phrase\" ($customTokensLine)")
+                    return
+                }
+            }
+
+            Log.i(TAG, "🔧 Initializing sherpa-onnx keyword spotter (assets/$ASSET_DIR, phrase=\"$phrase\")…")
             val modelConfig = OnlineModelConfig(
                 transducer = OnlineTransducerModelConfig(
                     encoder = "$ASSET_DIR/encoder.int8.onnx",
@@ -87,8 +109,6 @@ class SherpaKwsWakeWordDetector(
                     joiner = "$ASSET_DIR/joiner.int8.onnx",
                 ),
                 tokens = "$ASSET_DIR/tokens.txt",
-                // One thread: the 3.3M model decodes 100 ms of audio far faster than real time, and
-                // a second thread only adds ONNX Runtime's idle spin-wait between decodes.
                 numThreads = 1,
                 provider = "cpu",
                 modelType = "zipformer2",
@@ -100,16 +120,11 @@ class SherpaKwsWakeWordDetector(
                 keywordsScore = keywordsScore,
                 keywordsThreshold = keywordsThreshold,
             )
-            // Pre-flight: sherpa's native newFromAsset() calls abort() (SIGABRT —
-            // NOT a catchable Java exception) if any keyword token is absent from
-            // the model vocab. Validate in Kotlin first so a bad keywords.txt
-            // degrades to the Stub detector instead of crashing the whole app.
-            validateKeywordAssets()
+            validateKeywordAssets(vocab)
 
-            // assetManager != null → model paths are resolved from APK assets.
             spotter = KeywordSpotter(assetManager = context.assets, config = config)
             initError = null
-            Log.i(TAG, "✅ sherpa-onnx keyword spotter initialized (listening for \"Wake up AURA\")")
+            Log.i(TAG, "✅ sherpa-onnx keyword spotter initialized (listening for \"$phrase\")")
         } catch (e: Exception) {
             initError = e
             Log.e(TAG, "❌ Failed to initialize sherpa-onnx keyword spotter: ${e.message}", e)
@@ -117,28 +132,82 @@ class SherpaKwsWakeWordDetector(
         }
     }
 
-    /**
-     * Verify every keyword token exists in the model vocabulary BEFORE handing the
-     * config to native code. sherpa's `EncodeBase` aborts the process on a missing
-     * token (as happened with a space-bearing `@Hey AURA` display phrase). Throwing
-     * here is recoverable — [WakeWordDetector.create] falls back to the Stub.
-     */
-    private fun validateKeywordAssets() {
-        val vocab: HashSet<String> = context.assets.open("$ASSET_DIR/tokens.txt")
+    private fun loadVocab(): HashSet<String> =
+        context.assets.open("$ASSET_DIR/tokens.txt")
             .bufferedReader().useLines { lines ->
                 lines.mapNotNull { it.trim().substringBefore(' ').takeIf(String::isNotEmpty) }
                     .toHashSet()
             }
-        context.assets.open("$ASSET_DIR/keywords.txt").bufferedReader().useLines { lines ->
-            lines.filter { it.isNotBlank() }.forEach { line ->
-                // Keep only the acoustic-token columns; drop ":score", "#threshold", "@phrase".
-                val tokens = line.substringBefore(" :").substringBefore(" #").substringBefore(" @")
-                    .trim().split(Regex("\\s+"))
-                val missing = tokens.filter { it.isNotEmpty() && it !in vocab }
-                check(missing.isEmpty()) {
-                    "keywords.txt token(s) $missing not in tokens.txt (line: \"$line\"). " +
-                        "sherpa would SIGABRT on this — refusing to initialize."
+
+    private fun ensureKwsFilesOnDisk(): File {
+        val dir = File(context.filesDir, ASSET_DIR).apply { mkdirs() }
+        val assetFiles = listOf("encoder.int8.onnx", "decoder.int8.onnx", "joiner.int8.onnx", "tokens.txt")
+        for (name in assetFiles) {
+            val target = File(dir, name)
+            if (!target.exists() || target.length() == 0L) {
+                context.assets.open("$ASSET_DIR/$name").use { input ->
+                    target.outputStream().use { output -> input.copyTo(output) }
                 }
+            }
+        }
+        return dir
+    }
+
+    /**
+     * Deterministically encode any spoken phrase into valid `tokens.txt` BPE tokens via
+     * greedy longest-match, preventing native `EncodeBase` SIGABRT on unknown tokens.
+     */
+    private fun tokenizePhraseForKws(phrase: String, vocab: Set<String>): String? {
+        val digitWords = mapOf(
+            '0' to " ZERO ", '1' to " ONE ", '2' to " TWO ", '3' to " THREE ", '4' to " FOUR ",
+            '5' to " FIVE ", '6' to " SIX ", '7' to " SEVEN ", '8' to " EIGHT ", '9' to " NINE ",
+        )
+        val expanded = buildString {
+            for (ch in phrase.uppercase()) {
+                append(digitWords[ch] ?: ch)
+            }
+        }
+        val words = expanded
+            .replace(Regex("[^A-Z'\\s]"), " ")
+            .trim()
+            .split(Regex("\\s+"))
+            .filter { it.isNotBlank() }
+
+        if (words.isEmpty()) return null
+
+        val outTokens = mutableListOf<String>()
+        for (word in words) {
+            var remaining = "\u2581$word"
+            while (remaining.isNotEmpty()) {
+                var matched: String? = null
+                for (len in remaining.length downTo 1) {
+                    val candidate = remaining.substring(0, len)
+                    if (candidate in vocab && candidate != "<blk>" && candidate != "<unk>" && candidate != "<sos/eos>") {
+                        matched = candidate
+                        break
+                    }
+                }
+                if (matched == null) return null
+                outTokens.add(matched)
+                remaining = remaining.substring(matched.length)
+            }
+        }
+        return outTokens.joinToString(" ").takeIf { it.isNotBlank() }
+    }
+
+    private fun validateKeywordAssets(vocab: Set<String>) {
+        val lines = context.assets.open("$ASSET_DIR/keywords.txt").bufferedReader().use { it.readLines() }
+        validateKeywordLines(lines, vocab, "keywords.txt")
+    }
+
+    private fun validateKeywordLines(lines: List<String>, vocab: Set<String>, label: String) {
+        lines.filter { it.isNotBlank() }.forEach { line ->
+            val tokens = line.substringBefore(" :").substringBefore(" #").substringBefore(" @")
+                .trim().split(Regex("\\s+"))
+            val missing = tokens.filter { it.isNotEmpty() && it !in vocab }
+            check(missing.isEmpty()) {
+                "$label token(s) $missing not in tokens.txt (line: \"$line\"). " +
+                    "sherpa would SIGABRT on this — refusing to initialize."
             }
         }
     }
@@ -220,7 +289,7 @@ class SherpaKwsWakeWordDetector(
 
         try {
             audioRecord.startRecording()
-            Log.i(TAG, "✅ Wake word detection active — listening for \"Wake up AURA\"…")
+            Log.i(TAG, "✅ Wake word detection active — listening for \"$configuredWakeWord\"…")
 
             while (coroutineContext.isActive && _isListening.value) {
                 val n = audioRecord.read(shortBuf, 0, CHUNK_SAMPLES)

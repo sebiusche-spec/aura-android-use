@@ -32,7 +32,7 @@ object ClientToolCatalog {
         ),
         ClientToolInfo(
             "recall_memory",
-            "Look up something you told AURA earlier that isn't already in its context.",
+            "Look up something you told THAKUR OS earlier that isn't already in its context.",
         ),
         ClientToolInfo(
             "save_memory",
@@ -40,7 +40,7 @@ object ClientToolCatalog {
         ),
         ClientToolInfo(
             "forget_memory",
-            "Delete one remembered fact when you ask AURA to forget it.",
+            "Delete one remembered fact when you ask THAKUR OS to forget it.",
         ),
         ClientToolInfo(
             "set_reminder",

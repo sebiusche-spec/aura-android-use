@@ -17,18 +17,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.RecordVoiceOver
-import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
 import com.aura.aura_ui.presentation.components.AuraScreenScaffold
+import com.aura.aura_ui.presentation.components.LiquidGlassButton
+import com.aura.aura_ui.presentation.components.LiquidGlassSurface
+import com.aura.aura_ui.presentation.components.LiquidGlassToggle
+import com.aura.aura_ui.presentation.components.LiquidPalette
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import com.aura.aura_ui.agent.conversation.PersonaOwner
@@ -109,13 +107,13 @@ fun CompanionScreen(
                     ownerName = entered
                     PersonaOwner.set(context, entered)
                 },
-                label = { Text("What should AURA call you?") },
+                label = { Text("What should THAKUR OS call you?") },
                 supportingText = {
                     Text(
                         if (ownerName.isBlank()) {
-                            "Optional. Leave empty and AURA just speaks to you directly."
+                            "Optional. Leave empty and THAKUR OS just speaks to you directly."
                         } else {
-                            "AURA will address you as \"${ownerName.trim()}\". Applies next session."
+                            "THAKUR OS will address you as \"${ownerName.trim()}\". Applies next session."
                         },
                     )
                 },
@@ -125,7 +123,12 @@ fun CompanionScreen(
 
             // ── Voice mode: two mutually-exclusive switches over one boolean ──────
             Text("VOICE MODE", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
-            Surface(shape = RoundedCornerShape(14.dp), tonalElevation = 1.dp) {
+            LiquidGlassSurface(
+                shape = RoundedCornerShape(18.dp),
+                cornerRadiusDp = 18.dp,
+                strongBlur = false,
+                tintAlpha = 0.56f,
+            ) {
                 Column {
                     ModeRow(
                         title = "Use Gemini Live",
@@ -150,18 +153,23 @@ fun CompanionScreen(
             }
 
             // ── Assistant Voice (moved here from Settings) ────────────────────────
-            Surface(shape = RoundedCornerShape(14.dp), tonalElevation = 1.dp) {
+            LiquidGlassSurface(
+                shape = RoundedCornerShape(18.dp),
+                cornerRadiusDp = 18.dp,
+                strongBlur = false,
+                tintAlpha = 0.54f,
+                onClick = onOpenVoiceSettings,
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(onClick = onOpenVoiceSettings)
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
                         Icons.Filled.RecordVoiceOver,
                         null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = LiquidPalette.SilkCyan,
                         modifier = Modifier.width(22.dp),
                     )
                     Spacer(Modifier.width(14.dp))
@@ -191,8 +199,9 @@ fun CompanionScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Button(
+            LiquidGlassButton(
                 onClick = { vm.saveKey(keyInput); keyInput = "" },
+                accentGlow = LiquidPalette.SilkCyan,
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(if (state.hasKey) "Update key" else "Save key") }
             Text(
@@ -226,6 +235,6 @@ private fun ModeRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Switch(checked = checked, enabled = enabled, onCheckedChange = onCheckedChange)
+        LiquidGlassToggle(checked = checked, enabled = enabled, onCheckedChange = onCheckedChange)
     }
 }
