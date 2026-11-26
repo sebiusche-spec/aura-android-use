@@ -39,7 +39,7 @@
         android:xlargeScreens="true"
         android:anyDensity="true" />
 
-    <!-- Required Permissions for AURA Assistant -->
+    <!-- Required Permissions for KAIROX Assistant -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -220,7 +220,7 @@
             android:stopWithTask="false"
             android:foregroundServiceType="microphone|connectedDevice" />
 
-        <!-- AURA Accessibility Service -->
+        <!-- KAIROX Accessibility Service -->
         <service
             android:name=".accessibility.AuraAccessibilityService"
             android:enabled="true"
@@ -241,7 +241,7 @@
             android:enabled="true"
             android:exported="false" />
 
-        <!-- AURA System Overlay Service (Google Assistant-style) -->
+        <!-- KAIROX System Overlay Service -->
         <service
             android:name=".overlay.AuraOverlayService"
             android:enabled="true"
@@ -267,7 +267,7 @@
             </intent-filter>
         </service>
 
-        <!-- Wake Word Listening Service (always-on "Hey AURA" detection) -->
+        <!-- Wake Word Listening Service (always-on "Hey KAIROX" detection) -->
         <service
             android:name=".services.WakeWordListeningService"
             android:enabled="true"
@@ -286,7 +286,7 @@
              settings (the enable screen is the consent boundary). -->
         <service
             android:name=".ime.AuraKeyboardService"
-            android:label="THAKUR OS Keyboard"
+            android:label="KAIROX Keyboard"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_INPUT_METHOD">
