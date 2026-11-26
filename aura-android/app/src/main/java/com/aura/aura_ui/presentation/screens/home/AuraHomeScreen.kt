@@ -179,11 +179,11 @@ private object AppIconCache {
 }
 
 /**
- * THAKUR OS Home / Launcher screen:
- * 1. Top neon tech frame with T+Crown logo, "THAKUR OS", "• Listening •", voice waveform & settings gear.
+ * KAIROX Home / Launcher screen:
+ * 1. Top neon tech frame with T+Crown logo, "KAIROX", "• Listening •", voice waveform & settings gear.
  * 2. Full-width Liquid Glass Search Bar ("Search apps...", search icon left, 4-dot grid quick hub right).
  * 3. 5-column installed app grid with purple-blue neon rings over the dark sunset mountain wallpaper.
- * 4. Bottom Liquid Glass Speaking panel with T+Crown glowing ring, "THAKUR OS" + "Speaking...",
+ * 4. Bottom Liquid Glass Speaking panel with T+Crown glowing ring, "KAIROX" + "Speaking...",
  *    live animated blue-purple waveform bars, and circular X button.
  */
 @Composable
@@ -294,7 +294,7 @@ fun AuraHomeScreen(
         ) {
             Spacer(Modifier.height(6.dp))
 
-            // 1. TOP BAR: T + Crown | THAKUR OS + • Listening • | Waveform + Gear
+            // 1. TOP BAR: T + Crown | KAIROX + • Listening • | Waveform + Gear
             ThakurLauncherTopBar(
                 shape = chamferShape,
                 primaryGlow = primaryGlow,
@@ -436,7 +436,7 @@ fun AuraHomeScreen(
 
             Spacer(Modifier.height(6.dp))
 
-            // 4. BOTTOM BAR: Big Liquid Glass Speaking Panel with T+Crown, "THAKUR OS" + "Speaking...",
+            // 4. BOTTOM BAR: Big Liquid Glass Speaking Panel with T+Crown, "KAIROX" + "Speaking...",
             //    live animated blue-purple waveform bars, and circular X close/clear button
             ThakurSpeakingBottomBar(
                 shape = chamferShape,
@@ -534,7 +534,7 @@ private fun ThakurLauncherTopBar(
                 )
                 Image(
                     painter = painterResource(R.drawable.thakur_crown_t_mark),
-                    contentDescription = "THAKUR OS Menu",
+                    contentDescription = "KAIROX Menu",
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.size(44.dp),
                 )
@@ -566,7 +566,7 @@ private fun ThakurLauncherTopBar(
                     ),
             )
 
-            // Center: THAKUR OS + • Listening • in pink
+            // Center: KAIROX + • Listening • in pink
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -636,7 +636,7 @@ private fun ThakurLauncherTopBar(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Filled.Settings,
-                        contentDescription = "THAKUR OS Settings",
+                        contentDescription = "KAIROX Settings",
                         tint = Color(0xFF6CE8FF),
                         modifier = Modifier.size(21.dp),
                     )
@@ -1126,7 +1126,7 @@ private fun ThakurSpeakingBottomBar(
                 }
                 Image(
                     painter = painterResource(R.drawable.thakur_crown_t_mark),
-                    contentDescription = "Talk to THAKUR OS",
+                    contentDescription = "Talk to KAIROX",
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.size(56.dp),
                 )
@@ -1152,7 +1152,7 @@ private fun ThakurSpeakingBottomBar(
 
             Spacer(Modifier.width(10.dp))
 
-            // Center: THAKUR OS + Speaking... + live animated blue-purple waveform bars
+            // Center: KAIROX + Speaking... + live animated blue-purple waveform bars
             Column(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
