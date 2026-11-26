@@ -166,10 +166,10 @@ fun AuraAppShell(
 
     val commandEntries = remember(navController, onStartChat, onOpenBrowser) {
         listOf(
-            CommandPaletteEntry("voice", "Voice Assistant", "Talk to THAKUR OS", Icons.Filled.Mic, "RUN") {
+            CommandPaletteEntry("voice", "Voice Assistant", "Talk to KAIROX", Icons.Filled.Mic, "RUN") {
                 onStartChat(null)
             },
-            CommandPaletteEntry("browser", "THAKUR OS Browser", "Open built-in WebView browser", Icons.Outlined.SmartToy, "WEB") {
+            CommandPaletteEntry("browser", "KAIROX Browser", "Open built-in WebView browser", Icons.Outlined.SmartToy, "WEB") {
                 onOpenBrowser()
             },
             CommandPaletteEntry("home", "Home", "Main dashboard & quick prompts", Icons.Outlined.Home, "TAB") {
@@ -202,7 +202,7 @@ fun AuraAppShell(
             CommandPaletteEntry("voice_cfg", "Voice & Companion", "Gemini Live & voice settings", Icons.Outlined.RecordVoiceOver, "VOICE") {
                 navController.navigate(AuraRoutes.AGENT_COMPANION)
             },
-            CommandPaletteEntry("restricted", "Restricted Apps", "Apps THAKUR OS avoids", Icons.Outlined.Block, "SAFETY") {
+            CommandPaletteEntry("restricted", "Restricted Apps", "Apps KAIROX avoids", Icons.Outlined.Block, "SAFETY") {
                 navController.navigate(AuraRoutes.SETTINGS_RESTRICTED_APPS)
             },
             CommandPaletteEntry("permissions", "Permissions", "Accessibility, overlay & mic health", Icons.Outlined.Security, "ACCESS") {
@@ -219,7 +219,7 @@ fun AuraAppShell(
 
     when (val state = gateState) {
         is GateState.KillSwitchBlocked ->
-            BlockScreen(title = "THAKUR OS is turned off", message = state.message, updateUrl = null, scheme = scheme)
+            BlockScreen(title = "KAIROX is turned off", message = state.message, updateUrl = null, scheme = scheme)
         is GateState.VersionBlocked ->
             BlockScreen(title = "Update required", message = state.message, updateUrl = state.updateUrl, scheme = scheme)
         else -> {
@@ -484,12 +484,12 @@ fun AuraAppShell(
                                 type = "text/plain"
                                 putExtra(
                                     Intent.EXTRA_TEXT,
-                                    "THAKUR OS — on-device AI assistant developed by Shivam Thakur.",
+                                    "KAIROX — on-device AI assistant developed by Shivam Thakur.",
                                 )
                             }
                             runCatching {
                                 analyticsContext.startActivity(
-                                    Intent.createChooser(shareIntent, "Share THAKUR OS")
+                                    Intent.createChooser(shareIntent, "Share KAIROX")
                                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                                 )
                             }
@@ -523,7 +523,7 @@ fun AuraAppShell(
                         onDismiss = { createPanelOpen = false },
                         onNote = { note ->
                             if (note != null) {
-                                Toast.makeText(analyticsContext, "Note queued for THAKUR OS", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(analyticsContext, "Note queued for KAIROX", Toast.LENGTH_SHORT).show()
                                 onStartChat("Remember this note: $note")
                             } else {
                                 navigateTop(AuraRoutes.AGENT_MEMORY)
