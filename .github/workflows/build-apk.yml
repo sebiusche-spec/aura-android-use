@@ -1,7 +1,7 @@
 name: Build APK
 on:
   push:
-    branches: [ main ]
+    branches: [ main, kairox-v1 ]
   workflow_dispatch:
 
 jobs:
@@ -34,5 +34,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: THAKUR-OS-APK
+          name: KAIROX-APK
           path: aura-android/app/build/outputs/apk/debug/app-debug.apk
