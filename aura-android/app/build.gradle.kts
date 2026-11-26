@@ -84,7 +84,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.aura.auraui.feature"
+        applicationId = "com.aura.auraui.feature" // KAIROX keeps the existing Firebase app identity for compatibility.
         // Bumped to 26 — required by Netty (HTTPS server engine for the
         // on-device MCP server in :mcp-server). See that module for details.
         minSdk = 26
