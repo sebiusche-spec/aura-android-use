@@ -124,7 +124,7 @@ class MainActivity : FragmentActivity() {
                             
                             android.widget.Toast.makeText(
                                 this,
-                                "Screen capture enabled - AURA can now capture screenshots",
+                                "Screen capture enabled - KAIROX can now capture screenshots",
                                 android.widget.Toast.LENGTH_LONG,
                             ).show()
                         } else {
@@ -178,7 +178,7 @@ class MainActivity : FragmentActivity() {
                 
                 android.widget.Toast.makeText(
                     this,
-                    "Screen capture disabled. AURA will use UI-only mode (no screenshots).",
+                    "Screen capture disabled. KAIROX will use UI-only mode (no screenshots).",
                     android.widget.Toast.LENGTH_LONG,
                 ).show()
             }
@@ -483,7 +483,7 @@ class MainActivity : FragmentActivity() {
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "Unlock to use AURA",
+                            text = "Unlock to use KAIROX",
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -548,7 +548,7 @@ class MainActivity : FragmentActivity() {
     private fun fixFirstBrokenPermission() {
         when {
             !checkAccessibilityService() -> {
-                Toast.makeText(this, "Enable AURA in Accessibility settings", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Enable KAIROX in Accessibility settings", Toast.LENGTH_LONG).show()
                 try {
                     startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
                 } catch (e: Exception) {
@@ -617,7 +617,7 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    /** Open AURA's own interactive WebView browser over the home screen. */
+    /** Open KAIROX's own interactive WebView browser over the home screen. */
     private fun openAuraBrowser() {
         if (!Settings.canDrawOverlays(this)) {
             fixFirstBrokenPermission()
@@ -761,7 +761,7 @@ class MainActivity : FragmentActivity() {
                 Log.w(TAG, "Accessibility service not enabled - cannot request screen capture")
                 android.widget.Toast.makeText(
                     this,
-                    "Please enable Accessibility Service first:\nSettings → Accessibility → AURA",
+                    "Please enable Accessibility Service first:\nSettings → Accessibility → KAIROX",
                     android.widget.Toast.LENGTH_LONG,
                 ).show()
 
@@ -812,7 +812,7 @@ class MainActivity : FragmentActivity() {
     }
 
     /**
-     * Check if AURA accessibility service is enabled
+     * Check if KAIROX accessibility service is enabled
      */
     private fun checkAccessibilityService(): Boolean {
         val accessibilityManager = getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
@@ -834,12 +834,12 @@ class MainActivity : FragmentActivity() {
                         serviceName.endsWith("AuraAccessibilityService")
                 )
             ) {
-                Log.i(TAG, "AURA Accessibility Service is enabled")
+                Log.i(TAG, "KAIROX Accessibility Service is enabled")
                 return true
             }
         }
 
-        Log.w(TAG, "AURA Accessibility Service is not enabled")
+        Log.w(TAG, "KAIROX Accessibility Service is not enabled")
         return false
     }
 
